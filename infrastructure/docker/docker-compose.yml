@@ -1,0 +1,79 @@
+version: "3.9"
+
+# =============================================================
+# Nama Wellness — Local Development Services
+# =============================================================
+# Runs the data layer only. API and Web run locally (hot reload).
+# Commands:
+#   pnpm infra:up    — start all services
+#   pnpm infra:down  — stop all services
+#   pnpm infra:reset — wipe data and restart fresh
+# =============================================================
+
+services:
+  # -----------------------------------------------------------
+  # PostgreSQL 15
+  # -----------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: nama_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nama_wellness
+      POSTGRES_USER: nama_user
+      POSTGRES_PASSWORD: nama_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nama_user -d nama_wellness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------------
+  # Redis 7
+  # -----------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: nama_redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------------
+  # LocalStack — AWS S3 emulation
+  # -----------------------------------------------------------
+  localstack:
+    image: localstack/localstack:latest
+    container_name: nama_localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PERSISTENCE=1
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  postgres_data:
+    name: nama_postgres_data
+  redis_data:
+    name: nama_redis_data
+  localstack_data:
+    name: nama_localstack_data

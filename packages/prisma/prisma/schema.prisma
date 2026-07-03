@@ -1,0 +1,405 @@
+// Prisma schema for Nama Wellness — Sprint A & B
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================
+// Identity & Access
+// =============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  phone         String?   @unique
+  passwordHash  String
+  emailVerified Boolean   @default(false)
+  phoneVerified Boolean   @default(false)
+  status        UserStatus @default(ACTIVE)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  roles         UserRole[]
+  profile       Profile?
+  refreshTokens RefreshToken[]
+  passwordHistory PasswordHistory[]
+
+  // Relations for Sprint B
+  teacherApplications        TeacherApplication[] @relation("Applicant")
+  teacherApplicationsReviewed TeacherApplication[] @relation("AppReviewer")
+  teacherDocumentsVerified   TeacherDocument[]    @relation("DocumentVerifier")
+  teacherInterviewsConducted TeacherInterview[]   @relation("Interviewer")
+  teacherProfile             TeacherProfile?
+  
+  courses                    Course[]             @relation("CourseTeacher")
+  coursesAssigned            Course[]             @relation("CourseAssigner")
+  coursePricingsProposed     CoursePricing[]      @relation("PriceProposer")
+  coursePricingsApproved     CoursePricing[]      @relation("PriceApprover")
+  studyMaterialsUploaded     StudyMaterial[]      @relation("MaterialUploader")
+  studyMaterialsApproved     StudyMaterial[]      @relation("MaterialApprover")
+
+  @@map("users")
+}
+
+model UserRole {
+  id             String         @id @default(cuid())
+  userId         String
+  role           Role
+  productVariant ProductVariant @default(EDPRO)
+  createdAt      DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@map("user_roles")
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  firstName String
+  lastName  String
+  avatarUrl String?
+  bio       String?
+  timezone  String   @default("Asia/Kolkata")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model OTPVerification {
+  id         String     @id @default(cuid())
+  identifier String     // email or phone
+  codeHash   String
+  purpose    OTPPurpose
+  expiresAt  DateTime
+  consumed   Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  @@index([identifier, purpose])
+  @@map("otp_verifications")
+}
+
+model PasswordHistory {
+  id           String   @id @default(cuid())
+  userId       String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_history")
+}
+
+// =============================================================
+// Teacher Lifecycle (Sprint B)
+// =============================================================
+
+model TeacherApplication {
+  id               String           @id @default(cuid())
+  userId           String
+  status           TeacherAppStatus @default(DRAFT)
+  submittedAt      DateTime?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  rejectionReason  String?
+  adminNotes       String?
+  teachingSubject  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user             User             @relation("Applicant", fields: [userId], references: [id])
+  reviewer         User?            @relation("AppReviewer", fields: [reviewedBy], references: [id])
+  documents        TeacherDocument[]
+  interviews       TeacherInterview[]
+
+  @@map("teacher_applications")
+}
+
+model TeacherDocument {
+  id             String       @id @default(cuid())
+  applicationId  String
+  documentType   DocumentType
+  fileUrl        String
+  fileName       String
+  mimeType       String
+  fileSizeBytes  Int
+  verified       Boolean      @default(false)
+  verifiedBy     String?
+  verifiedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  application    TeacherApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  verifier       User?              @relation("DocumentVerifier", fields: [verifiedBy], references: [id])
+
+  @@map("teacher_documents")
+}
+
+model TeacherInterview {
+  id             String           @id @default(cuid())
+  applicationId  String
+  scheduledAt    DateTime
+  conductedBy    String?
+  outcome        InterviewOutcome @default(PENDING)
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  application    TeacherApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interviewer    User?              @relation("Interviewer", fields: [conductedBy], references: [id])
+
+  @@map("teacher_interviews")
+}
+
+model TeacherProfile {
+  id                  String            @id @default(cuid())
+  userId              String            @unique
+  onboardingFeePaid   Boolean           @default(false)
+  onboardingPaidAt    DateTime?
+  performanceStatus   PerformanceStatus @default(GOOD_STANDING)
+  specialties         String[]
+  averageRating       Decimal?          @db.Decimal(3,2)
+  totalReviews        Int               @default(0)
+  activatedAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_profiles")
+}
+
+// =============================================================
+// Catalog & Courses (Sprint B)
+// =============================================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  iconUrl     String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courses     Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id              String       @id @default(cuid())
+  title           String
+  slug            String       @unique
+  description     String
+  courseType      CourseType
+  categoryId      String
+  teacherId       String?
+  assignedBy      String?
+  status          CourseStatus @default(DRAFT)
+  coverImageUrl   String?
+  publishedAt     DateTime?
+  rejectedReason  String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  category        Category     @relation(fields: [categoryId], references: [id])
+  teacher         User?        @relation("CourseTeacher", fields: [teacherId], references: [id])
+  assigner        User?        @relation("CourseAssigner", fields: [assignedBy], references: [id])
+  
+  pricings        CoursePricing[]
+  modules         CourseModule[]
+  studyMaterials  StudyMaterial[]
+
+  @@map("courses")
+}
+
+model CoursePricing {
+  id             String         @id @default(cuid())
+  courseId       String
+  amount         Decimal        @db.Decimal(12,2)
+  currency       String         @default("INR")
+  proposedBy     String
+  approvedBy     String?
+  approvalStatus ApprovalStatus @default(PENDING)
+  effectiveAt    DateTime?
+  isCurrent      Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  course         Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  proposer       User           @relation("PriceProposer", fields: [proposedBy], references: [id])
+  approver       User?          @relation("PriceApprover", fields: [approvedBy], references: [id])
+
+  @@map("course_pricing")
+}
+
+model CourseModule {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+
+  @@map("course_modules")
+}
+
+model Lesson {
+  id              String     @id @default(cuid())
+  moduleId        String
+  title           String
+  lessonType      LessonType
+  contentUrl      String?
+  durationSeconds Int?
+  sortOrder       Int        @default(0)
+  isPreview       Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  module          CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@map("lessons")
+}
+
+model StudyMaterial {
+  id             String         @id @default(cuid())
+  courseId       String
+  title          String
+  fileUrl        String
+  fileName       String
+  mimeType       String
+  fileSizeBytes  Int
+  uploadedBy     String
+  approvalStatus ApprovalStatus @default(PENDING)
+  approvedBy     String?
+  approvedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  course         Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  uploader       User           @relation("MaterialUploader", fields: [uploadedBy], references: [id])
+  approver       User?          @relation("MaterialApprover", fields: [approvedBy], references: [id])
+
+  @@map("study_materials")
+}
+
+
+// =============================================================
+// Enums
+// =============================================================
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+  EMPLOYEE
+  COMPANY_ADMIN
+}
+
+enum ProductVariant {
+  EDPRO
+  CORPORATE
+}
+
+enum OTPPurpose {
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum TeacherAppStatus {
+  DRAFT
+  PENDING
+  UNDER_REVIEW
+  INTERVIEW_SCHEDULED
+  APPROVED
+  REJECTED
+}
+
+enum DocumentType {
+  GOVERNMENT_ID
+  CERTIFICATION
+  EXPERIENCE_PROOF
+  PROFILE_PHOTO
+}
+
+enum InterviewOutcome {
+  PENDING
+  PASSED
+  FAILED
+}
+
+enum PerformanceStatus {
+  GOOD_STANDING
+  WARNING
+  PROBATION
+  SUSPENSION
+  TERMINATED
+}
+
+enum CourseType {
+  LIVE
+  RECORDED
+  HYBRID
+  INDIVIDUAL
+}
+
+enum CourseStatus {
+  DRAFT
+  PENDING_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum LessonType {
+  VIDEO
+  DOCUMENT
+  LIVE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
