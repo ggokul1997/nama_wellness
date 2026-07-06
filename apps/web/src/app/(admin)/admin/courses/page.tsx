@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course } from '@nama/shared';
 import Link from 'next/link';
+import { getErrorMessage } from '@/lib/error';
 
 export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -19,8 +20,8 @@ export default function AdminCoursesPage() {
     try {
       const res = await coursesApi.adminGetPendingCourses();
       setCourses(res.data?.courses || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch courses');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch courses'));
     } finally {
       setLoading(false);
     }

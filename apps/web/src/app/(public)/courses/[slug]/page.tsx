@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
-import type { Course } from '@nama/shared';
+import type { Course, CourseModule, Lesson } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
-export default function PublicCourseDetailPage() {
-  const params = useParams();
-  const slug = params.slug as string;
+export default function PublicCourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = React.use(params);
   const router = useRouter();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -22,12 +22,12 @@ export default function PublicCourseDetailPage() {
   const fetchCourse = async () => {
     try {
       const res = await coursesApi.getPublicCourseBySlug(slug);
-      setCourse(res.data?.course as any);
+      setCourse(res.data?.course as Course || null);
       if (res.data?.course?.modules?.[0]) {
         setExpandedModule(res.data.course.modules[0].id);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load course details');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load course details'));
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export default function PublicCourseDetailPage() {
             <p style={{ color: 'var(--text-secondary)' }}>Curriculum details are coming soon.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {course.modules.map((module: any, idx: number) => {
+              {course.modules.map((module: CourseModule, idx: number) => {
                 const isExpanded = expandedModule === module.id;
                 return (
                   <div key={module.id} className="glass-card" style={{ overflow: 'hidden' }}>
@@ -146,7 +146,7 @@ export default function PublicCourseDetailPage() {
                           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontStyle: 'italic' }}>No lessons in this module yet.</p>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {module.lessons.map((lesson: any, lIdx: number) => (
+                            {module.lessons.map((lesson: Lesson, lIdx: number) => (
                               <div key={lesson.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', padding: '1rem', background: 'var(--surface-default)', borderRadius: 'var(--radius-md)' }}>
                                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--surface-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
                                   {lIdx + 1}

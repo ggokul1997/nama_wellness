@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { categoriesApi } from '@/lib/api/categories';
 import type { Category } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
 interface CategoryFormProps {
   initialData?: Category;
@@ -80,8 +81,8 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
 
       // Update form with the new icon URL
       setFormData(prev => ({ ...prev, iconUrl: res.data!.fileUrl }));
-    } catch (err: any) {
-      setError(err.message || 'Upload failed');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Upload failed'));
     } finally {
       setUploading(false);
     }
@@ -100,8 +101,8 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
       }
       router.push('/admin/categories');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'An error occurred'));
       setLoading(false);
     }
   };

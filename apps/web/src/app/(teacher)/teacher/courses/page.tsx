@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
 export default function TeacherCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -20,8 +21,8 @@ export default function TeacherCoursesPage() {
     try {
       const res = await coursesApi.getMyCourses();
       setCourses(res.data?.courses || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch courses');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch courses'));
     } finally {
       setLoading(false);
     }
@@ -47,8 +48,8 @@ export default function TeacherCoursesPage() {
     try {
       await coursesApi.deleteCourse(id);
       setCourses(courses.filter((c) => c.id !== id));
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete course');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to delete course'));
     }
   };
 
@@ -57,8 +58,8 @@ export default function TeacherCoursesPage() {
       await coursesApi.clearCourseFeedback(id);
       setCourses(courses.map(c => c.id === id ? { ...c, rejectedReason: null } : c));
       setFeedbackModalCourse(null);
-    } catch (err: any) {
-      alert(err.message || 'Failed to clear feedback');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to clear feedback'));
     }
   };
 

@@ -28,7 +28,6 @@ export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(-
     if (refreshToken) {
       await authApi.logout(refreshToken).catch(() => {});
     }
-    document.cookie = 'nama_auth_role=; path=/; max-age=0';
     clearAuth();
     router.push(ROUTES.LOGIN);
   };

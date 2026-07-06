@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { coursesApi } from '@/lib/api/courses';
 import { categoriesApi } from '@/lib/api/categories';
 import type { Course, Category } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
 export default function PublicCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -25,8 +26,8 @@ export default function PublicCoursesPage() {
       ]);
       setCourses(coursesRes.data?.courses || []);
       setCategories(categoriesRes.data?.categories || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load courses');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load courses'));
     } finally {
       setLoading(false);
     }

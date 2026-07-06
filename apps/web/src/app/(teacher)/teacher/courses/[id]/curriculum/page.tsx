@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course, CourseModule, Lesson } from '@nama/shared';
 import Link from 'next/link';
+import { getErrorMessage } from '@/lib/error';
 
 export default function CurriculumBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -42,8 +43,8 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
       ]);
       setCourse(courseRes.data?.course || null);
       setModules(modulesRes.data?.modules || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load curriculum data');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load curriculum data'));
     } finally {
       setLoading(false);
     }
@@ -83,8 +84,8 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
       }
       setShowModuleModal(false);
       fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to save module');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to save module'));
     } finally {
       setSubmittingModule(false);
     }
@@ -95,8 +96,8 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
     try {
       await coursesApi.deleteModule(id, moduleId);
       fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete module');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to delete module'));
     }
   };
 
@@ -172,8 +173,8 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
       setShowLessonModal(false);
       setUploadProgress(0);
       fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to save lesson');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to save lesson'));
       setUploadProgress(0);
     } finally {
       setSubmittingLesson(false);
@@ -185,8 +186,8 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
     try {
       await coursesApi.deleteLesson(id, moduleId, lessonId);
       fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete lesson');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to delete lesson'));
     }
   };
 
@@ -321,7 +322,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
               </div>
               <div>
                 <label className="label">Lesson Type</label>
-                <select className="input" value={lessonType} onChange={e => setLessonType(e.target.value as any)}>
+                <select className="input" value={lessonType} onChange={e => setLessonType(e.target.value as Lesson['lessonType'])}>
                   <option value="VIDEO">Video</option>
                   <option value="DOCUMENT">Document / PDF</option>
                 </select>

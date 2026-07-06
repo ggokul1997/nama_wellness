@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import { categoriesApi } from '@/lib/api/categories';
-import type { Category } from '@nama/shared';
+import type { Category, Course } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function CreateCoursePage() {
       const createRes = await coursesApi.createCourse({
         title,
         description,
-        courseType: courseType as any,
+        courseType: courseType as Course['courseType'],
         categoryId,
       });
 
@@ -86,8 +87,8 @@ export default function CreateCoursePage() {
 
       // Success
       router.push('/teacher/courses');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while creating the course');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'An error occurred while creating the course'));
     } finally {
       setSubmitting(false);
     }

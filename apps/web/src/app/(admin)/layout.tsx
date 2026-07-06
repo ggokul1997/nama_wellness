@@ -9,6 +9,8 @@ const ADMIN_NAV = [
   { href: '/admin/teacher-applications', label: 'Teacher Apps', icon: '📝' },
   { href: ROUTES.ADMIN_CATEGORIES, label: 'Categories', icon: '🏷️' },
   { href: ROUTES.ADMIN_COURSES, label: 'Courses', icon: '📚' },
+  { href: '/admin/study-materials', label: 'Study Materials', icon: '📄' },
+  { href: '/admin/enrollments', label: 'Enrollments', icon: '🎓' },
   { href: ROUTES.ADMIN_COMPANIES, label: 'Companies', icon: '🏢' },
   { href: ROUTES.ADMIN_PAYMENTS, label: 'Payments', icon: '💳' },
   { href: ROUTES.ADMIN_PAYOUTS, label: 'Payouts', icon: '💸' },

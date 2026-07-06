@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+
 import { categoriesApi } from '@/lib/api/categories';
 import type { Category } from '@nama/shared';
 import CategoryForm from '../_components/CategoryForm';
+import { getErrorMessage } from '@/lib/error';
 
-export default function EditCategoryPage() {
-  const params = useParams();
-  const id = params.id as string;
+export default function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
   
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,8 +22,8 @@ export default function EditCategoryPage() {
     try {
       const res = await categoriesApi.getById(id);
       setCategory(res.data?.category || null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch category');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch category'));
     } finally {
       setLoading(false);
     }

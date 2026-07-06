@@ -5,6 +5,7 @@ export const teacherApplicationsApi = {
   async getMyApplication() {
     return apiFetch<{ application: TeacherApplication | null }>('/teacher-applications/my-application', {
       method: 'GET',
+      cache: 'no-store',
     });
   },
 
@@ -35,7 +36,7 @@ export const teacherApplicationsApi = {
 
   // Admin methods
   async getPending() {
-    return apiFetch<{ applications: any[] }>('/teacher-applications/pending', {
+    return apiFetch<{ applications: TeacherApplication[] }>('/teacher-applications/pending', {
       method: 'GET',
     });
   },

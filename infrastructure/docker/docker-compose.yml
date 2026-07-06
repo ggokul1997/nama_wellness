@@ -54,7 +54,7 @@ services:
   # LocalStack — AWS S3 emulation
   # -----------------------------------------------------------
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:3.8.0
     container_name: nama_localstack
     restart: unless-stopped
     ports:
@@ -65,10 +65,9 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - PERSISTENCE=1
     volumes:
-      - localstack_data:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./localstack-init:/etc/localstack/init/ready.d
 
 volumes:
   postgres_data:

@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { teacherApplicationsApi } from '@/lib/api/teacher-applications';
+import type { TeacherApplication, TeacherDocument } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
 export default function TeacherApplicationsPage() {
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<TeacherApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -16,8 +18,8 @@ export default function TeacherApplicationsPage() {
     try {
       const res = await teacherApplicationsApi.getPending();
       setApplications(res.data?.applications || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch applications');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch applications'));
     } finally {
       setLoading(false);
     }
@@ -34,8 +36,8 @@ export default function TeacherApplicationsPage() {
     try {
       await teacherApplicationsApi.reviewApplication(id, { approve, rejectionReason: rejectionReason || undefined });
       setApplications(applications.filter(a => a.id !== id));
-    } catch (err: any) {
-      alert(err.message || 'Failed to review application');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to review application'));
     }
   };
 
@@ -73,7 +75,7 @@ export default function TeacherApplicationsPage() {
                 </td>
               </tr>
             ) : (
-              applications.map((app: any) => (
+              applications.map((app) => (
                 <tr key={app.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                   <td style={{ padding: '1rem 1.5rem' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
@@ -93,7 +95,7 @@ export default function TeacherApplicationsPage() {
                   </td>
                   <td style={{ padding: '1rem 1.5rem' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {app.documents?.map((doc: any) => (
+                      {app.documents?.map((doc: TeacherDocument) => (
                         <a 
                           key={doc.id} 
                           href={doc.fileUrl} 

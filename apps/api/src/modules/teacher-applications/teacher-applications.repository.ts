@@ -1,4 +1,4 @@
-import type { Prisma, TeacherAppStatus } from '@prisma/client';
+import type { Prisma, TeacherAppStatus, DocumentType } from '@prisma/client';
 import { prisma } from '../../infrastructure/database/prisma.client.js';
 
 export const teacherApplicationsRepository = {
@@ -67,9 +67,9 @@ export const teacherApplicationsRepository = {
     });
   },
 
-  async deleteDocumentsByType(applicationId: string, documentType: string) {
+  async deleteDocumentsByType(applicationId: string, documentType: DocumentType) {
     return prisma.teacherDocument.deleteMany({
-      where: { applicationId, documentType: documentType as any },
+      where: { applicationId, documentType },
     });
   },
 

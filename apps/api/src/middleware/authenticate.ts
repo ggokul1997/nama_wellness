@@ -16,13 +16,18 @@ declare global {
 // Verifies the Bearer token in Authorization header and attaches decoded
 // payload to req.user. Throws 401 if missing or invalid.
 export function authenticate(req: Request, _res: Response, next: NextFunction): void {
-  const authHeader = req.headers.authorization;
+  let token: string | undefined;
 
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw Errors.unauthorized('No token provided');
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (req.cookies?.nama_access_token) {
+    token = req.cookies.nama_access_token;
   }
 
-  const token = authHeader.slice(7);
+  if (!token) {
+    throw Errors.unauthorized('No token provided');
+  }
 
   try {
     const payload = jwt.verify(token, config.JWT_ACCESS_SECRET) as JWTPayload;
@@ -35,10 +40,17 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
 
 // Optional authentication — attaches user if token present, otherwise continues
 export function optionalAuthenticate(req: Request, _res: Response, next: NextFunction): void {
+  let token: string | undefined;
+
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (req.cookies?.nama_access_token) {
+    token = req.cookies.nama_access_token;
+  }
+
+  if (token) {
     try {
-      const token = authHeader.slice(7);
       req.user = jwt.verify(token, config.JWT_ACCESS_SECRET) as JWTPayload;
     } catch {
       // Ignore — user stays undefined

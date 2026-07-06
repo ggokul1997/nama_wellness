@@ -18,6 +18,22 @@ export const authRouter: Router = Router();
 authRouter.post('/register', validate(registerSchema), authController.register);
 authRouter.post('/login', validate(loginSchema), authController.login);
 authRouter.post('/refresh', validate(refreshSchema), authController.refresh);
+
+// E2E Test Helper
+if (process.env.NODE_ENV !== 'production') {
+  authRouter.post('/test-verify', async (req, res) => {
+    const { email } = req.body;
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    await prisma.user.update({
+      where: { email },
+      data: { emailVerified: true },
+    });
+    await prisma.$disconnect();
+    res.json({ success: true });
+  });
+}
+
 authRouter.post('/verify-email', validate(verifyEmailSchema), authController.verifyEmail);
 authRouter.post(
   '/resend-verification',

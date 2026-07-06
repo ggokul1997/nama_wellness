@@ -15,6 +15,7 @@ function VerifyEmailContent() {
   const emailParam = searchParams.get('email') ?? '';
   const [apiError, setApiError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const [verifySuccess, setVerifySuccess] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<VerifyEmailInput>({
     resolver: zodResolver(verifyEmailSchema),
@@ -25,7 +26,10 @@ function VerifyEmailContent() {
     setApiError(null);
     try {
       await authApi.verifyEmail(data);
-      router.push(`${ROUTES.LOGIN}?verified=1`);
+      setVerifySuccess(true);
+      setTimeout(() => {
+        router.push(`${ROUTES.LOGIN}?verified=1`);
+      }, 2000);
     } catch (err) {
       setApiError(err instanceof ApiError ? err.message : 'Verification failed. Try again.');
     }
@@ -61,28 +65,41 @@ function VerifyEmailContent() {
         {apiError && <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>⚠️ {apiError}</div>}
         {resendSuccess && <div className="alert alert-success" style={{ marginBottom: '1.25rem' }}>✅ New code sent! Check Ethereal.</div>}
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <input type="hidden" {...register('email')} />
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label className="label" htmlFor="verify-code">Verification code</label>
-            <input
-              id="verify-code"
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              className={`input ${errors.code ? 'error' : ''}`}
-              placeholder="000000"
-              style={{ fontSize: '1.5rem', letterSpacing: '0.5rem', textAlign: 'center' }}
-              {...register('code')}
-            />
-            {errors.code && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.375rem', textAlign: 'center' }}>{errors.code.message}</p>}
+        {verifySuccess ? (
+          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--success)' }}>✅</div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+              Verified Successfully!
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+              Redirecting you to login...
+            </p>
+            <span className="btn-spinner" style={{ width: '1.5rem', height: '1.5rem', border: '2px solid rgba(139,92,246,0.3)', borderTopColor: 'var(--brand-500)' }} />
           </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <input type="hidden" {...register('email')} />
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="label" htmlFor="verify-code">Verification code</label>
+              <input
+                id="verify-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                className={`input ${errors.code ? 'error' : ''}`}
+                placeholder="000000"
+                style={{ fontSize: '1.5rem', letterSpacing: '0.5rem', textAlign: 'center' }}
+                {...register('code')}
+              />
+              {errors.code && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.375rem', textAlign: 'center' }}>{errors.code.message}</p>}
+            </div>
 
-          <button type="submit" id="btn-verify" disabled={isSubmitting} className="btn btn-primary btn-full btn-lg">
-            {isSubmitting ? <span className="btn-spinner" /> : null}
-            {isSubmitting ? 'Verifying…' : 'Verify Email'}
-          </button>
-        </form>
+            <button type="submit" id="btn-verify" disabled={isSubmitting} className="btn btn-primary btn-full btn-lg">
+              {isSubmitting ? <span className="btn-spinner" /> : null}
+              {isSubmitting ? 'Verifying…' : 'Verify Email'}
+            </button>
+          </form>
+        )}
 
         <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
           Didn't receive the code?{' '}

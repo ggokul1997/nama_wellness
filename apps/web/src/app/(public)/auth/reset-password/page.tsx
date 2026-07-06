@@ -14,6 +14,8 @@ function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const emailParam = searchParams.get('email') ?? '';
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
@@ -58,19 +60,51 @@ function ResetPasswordContent() {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label className="label" htmlFor="reset-password">New password</label>
-            <input id="reset-password" type="password" autoComplete="new-password"
-              className={`input ${errors.newPassword ? 'error' : ''}`}
-              placeholder="Min 8 chars, 1 uppercase, 1 digit"
-              {...register('newPassword')} />
+            <div style={{ position: 'relative' }}>
+              <input id="reset-password" type={showPassword ? "text" : "password"} autoComplete="new-password"
+                className={`input ${errors.newPassword ? 'error' : ''}`}
+                style={{ paddingRight: '2.5rem' }}
+                placeholder="Min 8 chars, 1 uppercase, 1 digit"
+                {...register('newPassword')} />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? '👁️‍🗨️' : '👁️'}
+              </button>
+            </div>
             {errors.newPassword && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.375rem' }}>{errors.newPassword.message}</p>}
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
             <label className="label" htmlFor="reset-confirm-password">Confirm new password</label>
-            <input id="reset-confirm-password" type="password" autoComplete="new-password"
-              className={`input ${errors.confirmPassword ? 'error' : ''}`}
-              placeholder="Confirm new password"
-              {...register('confirmPassword')} />
+            <div style={{ position: 'relative' }}>
+              <input id="reset-confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password"
+                className={`input ${errors.confirmPassword ? 'error' : ''}`}
+                style={{ paddingRight: '2.5rem' }}
+                placeholder="Confirm new password"
+                {...register('confirmPassword')} />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                }}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                title={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? '👁️‍🗨️' : '👁️'}
+              </button>
+            </div>
             {errors.confirmPassword && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.375rem' }}>{errors.confirmPassword.message}</p>}
           </div>
 

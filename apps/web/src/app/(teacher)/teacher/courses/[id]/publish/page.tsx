@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course, CoursePricing } from '@nama/shared';
 import Link from 'next/link';
+import { getErrorMessage } from '@/lib/error';
 
 export default function PublishCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -32,8 +33,8 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
       // We don't return pricing in getCourse by default right now, 
       // but if the course has a pricing, we would set it here.
       // For MVP, they have to set it before submitting.
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch course');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch course'));
     } finally {
       setLoading(false);
     }
@@ -48,8 +49,8 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
       alert('Pricing proposed successfully!');
       setEditingPrice(false);
       fetchCourse(); // Refresh course to get the new pricing
-    } catch (err: any) {
-      alert(err.message || 'Failed to propose pricing');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to propose pricing'));
     } finally {
       setSaving(false);
     }
@@ -63,8 +64,8 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
       setPrice('');
       setEditingPrice(false);
       fetchCourse(); // Refresh course
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete pricing');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to delete pricing'));
     } finally {
       setDeletingPrice(false);
     }
@@ -79,8 +80,8 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
       await coursesApi.submitForReview(id);
       alert('Course submitted for review!');
       router.push('/teacher/courses');
-    } catch (err: any) {
-      alert(err.message || 'Failed to submit course for review. Did you propose a price first?');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to submit course for review. Did you propose a price first?'));
     } finally {
       setSubmitting(false);
     }

@@ -39,13 +39,14 @@ export const coursesService = {
 
     // Strip sensitive information from lessons (like contentUrl) for public viewing
     if (course.modules) {
-      course.modules = course.modules.map(mod => ({
+      type PublicLesson = Omit<(typeof course.modules)[number]['lessons'][number], 'contentUrl'>;
+      type PublicModule = Omit<(typeof course.modules)[number], 'lessons'> & { lessons: PublicLesson[] };
+      const publicModules: PublicModule[] = course.modules.map(mod => ({
         ...mod,
-        lessons: mod.lessons.map(lesson => {
-          const { contentUrl, ...publicLessonData } = lesson as any;
-          return publicLessonData;
-        })
-      })) as any;
+        lessons: mod.lessons.map(({ contentUrl: _omitted, ...publicLessonData }) => publicLessonData),
+      }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      course.modules = publicModules as any;
     }
 
     return course;
@@ -287,7 +288,7 @@ export const coursesService = {
 
     const currentPrice = await pricingRepository.findCurrentByCourse(courseId);
     
-    if (data.status === 'APPROVED' || (data.status as any) === 'PUBLISHED') {
+    if (data.status === 'APPROVED') {
       if (currentPrice) {
         await pricingRepository.update(currentPrice.id, {
           approvalStatus: 'APPROVED',

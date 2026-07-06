@@ -7,6 +7,7 @@ import type { NextRequest } from 'next/server';
 
 const PUBLIC_PATHS = [
   '/',
+  '/courses',
   '/auth/login',
   '/auth/register',
   '/auth/verify-email',
@@ -49,6 +50,11 @@ export function middleware(request: NextRequest) {
   // Check role-specific paths
   for (const [prefix, requiredRole] of Object.entries(ROLE_PATHS)) {
     if (pathname.startsWith(prefix) && authRole !== requiredRole) {
+      // EXCEPTION: Allow anyone authenticated to access /teacher/onboarding to apply
+      if (pathname === '/teacher/onboarding') {
+        continue;
+      }
+
       // Redirect to the user's own portal dashboard
       const portalEntry = Object.entries(ROLE_PATHS).find(([, role]) => role === authRole);
       if (portalEntry) {

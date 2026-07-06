@@ -13,6 +13,8 @@ export default function RegisterPage() {
   const router = useRouter();
   const [apiError, setApiError] = useState<string | null>(null);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -146,17 +148,49 @@ export default function RegisterPage() {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label className="label" htmlFor="reg-password">Password</label>
-            <input id="reg-password" type="password" autoComplete="new-password"
-              className={`input ${errors.password ? 'error' : ''}`}
-              placeholder="Min 8 chars, 1 uppercase, 1 digit" {...register('password')} />
+            <div style={{ position: 'relative' }}>
+              <input id="reg-password" type={showPassword ? "text" : "password"} autoComplete="new-password"
+                className={`input ${errors.password ? 'error' : ''}`}
+                style={{ paddingRight: '2.5rem' }}
+                placeholder="Min 8 chars, 1 uppercase, 1 digit" {...register('password')} />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? '👁️‍🗨️' : '👁️'}
+              </button>
+            </div>
             {errors.password && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.25rem' }}>{errors.password.message}</p>}
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
             <label className="label" htmlFor="reg-confirm-password">Confirm Password</label>
-            <input id="reg-confirm-password" type="password" autoComplete="new-password"
-              className={`input ${errors.confirmPassword ? 'error' : ''}`}
-              placeholder="Confirm your password" {...register('confirmPassword')} />
+            <div style={{ position: 'relative' }}>
+              <input id="reg-confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password"
+                className={`input ${errors.confirmPassword ? 'error' : ''}`}
+                style={{ paddingRight: '2.5rem' }}
+                placeholder="Confirm your password" {...register('confirmPassword')} />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                }}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                title={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? '👁️‍🗨️' : '👁️'}
+              </button>
+            </div>
             {errors.confirmPassword && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.25rem' }}>{errors.confirmPassword.message}</p>}
           </div>
 

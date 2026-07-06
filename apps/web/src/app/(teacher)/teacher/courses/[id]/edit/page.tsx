@@ -4,7 +4,8 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import { categoriesApi } from '@/lib/api/categories';
-import type { Category } from '@nama/shared';
+import type { Category, Course } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
 export default function EditCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -66,7 +67,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       await coursesApi.updateCourse(id, {
         title,
         description,
-        courseType: courseType as any,
+        courseType: courseType as Course['courseType'],
         categoryId,
       });
 
@@ -83,8 +84,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       }
 
       router.push('/teacher/courses');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while saving the course');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'An error occurred while saving the course'));
     } finally {
       setSubmitting(false);
     }
@@ -100,6 +101,9 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Update your course details below.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={() => router.push(`/teacher/courses/${id}/materials`)} className="btn btn-ghost" style={{ border: '1px solid var(--surface-border)' }}>
+            Study Materials
+          </button>
           <button onClick={() => router.push(`/teacher/courses/${id}/curriculum`)} className="btn btn-secondary">
             Manage Curriculum
           </button>

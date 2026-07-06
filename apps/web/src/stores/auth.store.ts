@@ -37,6 +37,9 @@ export const useAuthStore = create<AuthState>()(
 
       clearAuth: () => {
         localStorage.removeItem('nama_access_token');
+        if (typeof document !== 'undefined') {
+          document.cookie = 'nama_auth_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+        }
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
       },
 

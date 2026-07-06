@@ -3,16 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { teacherApplicationsApi } from '@/lib/api/teacher-applications';
+import type { TeacherApplication, TeacherDocument, DocumentType } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
+import { FileUpload } from '@/components/ui/FileUpload';
 
 export default function TeacherApplyPage() {
   const { user } = useAuthStore();
-  const [application, setApplication] = useState<any>(null);
+  const [application, setApplication] = useState<TeacherApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [uploading, setUploading] = useState(false);
   const [firstName, setFirstName] = useState(user?.profile?.firstName || '');
   const [lastName, setLastName] = useState(user?.profile?.lastName || '');
   const [teachingSubject, setTeachingSubject] = useState('');
+  
+  const [isReplacingGovId, setIsReplacingGovId] = useState(false);
+  const [isReplacingCert, setIsReplacingCert] = useState(false);
 
   useEffect(() => {
     fetchApplication();
@@ -25,65 +30,53 @@ export default function TeacherApplyPage() {
         const app = res.data.application;
         setApplication(app);
         if (app.teachingSubject) {
-          setTeachingSubject(app.teachingSubject);
+          setTeachingSubject(prev => prev || app.teachingSubject!);
         }
-        // Pre-fill names from profile if available via the application's user data
-        if (app.user?.profile?.firstName) setFirstName(app.user.profile.firstName);
-        if (app.user?.profile?.lastName) setLastName(app.user.profile.lastName);
+        if (app.user?.profile?.firstName) {
+          setFirstName(prev => prev || app.user!.profile!.firstName!);
+        }
+        if (app.user?.profile?.lastName) {
+          setLastName(prev => prev || app.user!.profile!.lastName!);
+        }
       } else {
-        // Start a new draft if none exists
         const startRes = await teacherApplicationsApi.startApplication();
-        setApplication(startRes.data?.application);
+        setApplication(startRes.data?.application ?? null);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch application');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch application'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleCustomUpload = (docType: DocumentType) => async (file: File) => {
+    // 1. Get presigned URL
+    const { data } = await teacherApplicationsApi.getPresignedUrl({
+      applicationId: application!.id,
+      documentType: docType,
+      mimeType: file.type,
+      fileSizeBytes: file.size,
+    });
 
-    if (file.size > 1024 * 1024) {
-      alert('File size must be less than 1MB.');
-      e.target.value = '';
-      return;
+    if (!data) throw new Error('Failed to get upload URL');
+
+    // 2. Upload directly to S3 (LocalStack in dev)
+    const uploadRes = await fetch(data.uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error('Failed to upload file to S3');
     }
 
-    setUploading(true);
-    try {
-      // 1. Get presigned URL
-      const { data } = await teacherApplicationsApi.getPresignedUrl({
-        applicationId: application.id,
-        documentType: docType as any,
-        mimeType: file.type,
-        fileSizeBytes: file.size,
-      });
+    // Refresh application to show new document
+    await fetchApplication();
 
-      if (!data) throw new Error('Failed to get upload URL');
-
-      // 2. Upload directly to S3 (LocalStack in dev)
-      const uploadRes = await fetch(data.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error('Failed to upload file to S3');
-      }
-
-      // Refresh application to show new document
-      await fetchApplication();
-    } catch (err: any) {
-      alert(err.message || 'Upload failed');
-    } finally {
-      setUploading(false);
-    }
+    return { fileUrl: data.fileUrl };
   };
 
   const handleSubmit = async () => {
@@ -92,8 +85,8 @@ export default function TeacherApplyPage() {
       return;
     }
     
-    const govIdDoc = application?.documents?.find((d: any) => d.documentType === 'GOVERNMENT_ID');
-    const certDoc = application?.documents?.find((d: any) => d.documentType === 'CERTIFICATION');
+    const govIdDoc = application?.documents?.find((d: TeacherDocument) => d.documentType === 'GOVERNMENT_ID');
+    const certDoc = application?.documents?.find((d: TeacherDocument) => d.documentType === 'CERTIFICATION');
     
     if (!govIdDoc || !certDoc) {
       alert('You must upload both a Government ID and a Certification to submit your application.');
@@ -103,24 +96,25 @@ export default function TeacherApplyPage() {
     if (!confirm('Are you ready to submit your application for review?')) return;
     
     try {
-      const res = await teacherApplicationsApi.submitApplication(application.id, {
+      const res = await teacherApplicationsApi.submitApplication(application!.id, {
         firstName,
         lastName,
         teachingSubject,
       });
-      setApplication(res.data?.application);
+      setApplication(res.data?.application ?? null);
       alert('Application submitted successfully!');
-    } catch (err: any) {
-      alert(err.message || 'Failed to submit application');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to submit application'));
     }
   };
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading your application...</div>;
   if (error) return <div className="alert alert-error">{error}</div>;
+  if (!application) return <div className="alert alert-error">Application not found</div>;
 
   const isDraft = application?.status === 'DRAFT';
-  const govIdDoc = application?.documents?.find((d: any) => d.documentType === 'GOVERNMENT_ID');
-  const certDoc = application?.documents?.find((d: any) => d.documentType === 'CERTIFICATION');
+  const govIdDoc = application?.documents?.find((d: TeacherDocument) => d.documentType === 'GOVERNMENT_ID');
+  const certDoc = application?.documents?.find((d: TeacherDocument) => d.documentType === 'CERTIFICATION');
   const canSubmit = !!govIdDoc && !!certDoc && !!firstName && !!lastName && !!teachingSubject;
 
   return (
@@ -185,98 +179,145 @@ export default function TeacherApplyPage() {
           <div style={{ marginTop: '1rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-primary)' }}>Upload Documents</h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Upload exactly one Government ID and one Certification. Max 1MB each.
+              Upload exactly one Government ID and one Certification. Max 5MB each.
             </p>
           </div>
 
-          {/* Upload Inputs — show upload or uploaded state per doc type */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Government ID */}
-            <div style={{ padding: '1rem', border: `1px ${govIdDoc ? 'solid' : 'dashed'} ${govIdDoc ? 'var(--success)' : 'var(--surface-border)'}`, borderRadius: 'var(--radius-lg)', background: govIdDoc ? 'rgba(52,211,153,0.05)' : 'rgba(255,255,255,0.02)' }}>
-              <label className="label">Government ID <span style={{ color: 'var(--error)' }}>*</span></label>
-              {govIdDoc ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: 'var(--success)', fontSize: '1.125rem' }}>✅</span>
-                    <a href={govIdDoc.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.8125rem', color: 'var(--brand-400)', textDecoration: 'none' }}>
-                      Uploaded — View File
-                    </a>
+            <div>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-primary)' }}>Government ID</h3>
+              {govIdDoc && !isReplacingGovId ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(52,211,153,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ fontSize: '1.5rem' }}>🪪</div>
+                    <div>
+                      <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>Government ID</div>
+                      <a href={govIdDoc.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.875rem', color: 'var(--brand-400)', textDecoration: 'none', transition: 'color 0.2s' }}>View document ↗</a>
+                    </div>
                   </div>
-                  {isDraft && (
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>
-                      Replace
-                      <input 
-                        type="file" 
-                        onChange={(e) => handleFileUpload(e, 'GOVERNMENT_ID')}
-                        disabled={uploading}
-                        style={{ display: 'none' }}
-                      />
-                    </label>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ color: 'var(--success)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <span>✅</span> Uploaded
+                    </div>
+                    {isDraft && (
+                      <button 
+                        onClick={() => setIsReplacingGovId(true)} 
+                        className="btn btn-sm" 
+                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)' }}
+                      >
+                        Replace
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <input 
-                  type="file" 
-                  onChange={(e) => handleFileUpload(e, 'GOVERNMENT_ID')}
-                  disabled={!isDraft || uploading}
-                  style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <FileUpload
+                    label="Government ID (Passport, Driver's License)"
+                    accept="image/jpeg,image/png,application/pdf"
+                    maxSizeMB={5}
+                    customUploadFn={async (file) => {
+                      const res = await handleCustomUpload('GOVERNMENT_ID')(file);
+                      setIsReplacingGovId(false);
+                      return res;
+                    }}
+                    onUploadSuccess={() => {}}
+                  />
+                  {govIdDoc && isReplacingGovId && (
+                    <button 
+                      onClick={() => setIsReplacingGovId(false)} 
+                      className="btn btn-sm" 
+                      style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.35rem 0.75rem', fontSize: '0.8125rem', background: 'var(--surface-bg)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', zIndex: 10 }}
+                    >
+                      Cancel Replace
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             
             {/* Certification */}
-            <div style={{ padding: '1rem', border: `1px ${certDoc ? 'solid' : 'dashed'} ${certDoc ? 'var(--success)' : 'var(--surface-border)'}`, borderRadius: 'var(--radius-lg)', background: certDoc ? 'rgba(52,211,153,0.05)' : 'rgba(255,255,255,0.02)' }}>
-              <label className="label">Certification / Proof <span style={{ color: 'var(--error)' }}>*</span></label>
-              {certDoc ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: 'var(--success)', fontSize: '1.125rem' }}>✅</span>
-                    <a href={certDoc.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.8125rem', color: 'var(--brand-400)', textDecoration: 'none' }}>
-                      Uploaded — View File
-                    </a>
+            <div>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-primary)' }}>Teaching Certification</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Upload your teaching certificate or relevant degree.</p>
+              
+              {certDoc && !isReplacingCert ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(139,92,246,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ fontSize: '1.5rem' }}>🎓</div>
+                    <div>
+                      <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{certDoc.fileName || 'Certification Document'}</div>
+                      <a href={certDoc.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.875rem', color: 'var(--brand-400)', textDecoration: 'none', transition: 'color 0.2s' }}>View document ↗</a>
+                    </div>
                   </div>
-                  {isDraft && (
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>
-                      Replace
-                      <input 
-                        type="file" 
-                        onChange={(e) => handleFileUpload(e, 'CERTIFICATION')}
-                        disabled={uploading}
-                        style={{ display: 'none' }}
-                      />
-                    </label>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ color: 'var(--success)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <span>✅</span> Uploaded
+                    </div>
+                    {isDraft && (
+                      <button 
+                        onClick={() => setIsReplacingCert(true)} 
+                        className="btn btn-sm" 
+                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.8125rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)' }}
+                      >
+                        Replace
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <input 
-                  type="file" 
-                  onChange={(e) => handleFileUpload(e, 'CERTIFICATION')}
-                  disabled={!isDraft || uploading}
-                  style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <FileUpload
+                    label="Certification Document"
+                    accept="image/jpeg,image/png,application/pdf"
+                    maxSizeMB={5}
+                    customUploadFn={async (file) => {
+                      const res = await handleCustomUpload('CERTIFICATION')(file);
+                      setIsReplacingCert(false);
+                      return res;
+                    }}
+                    onUploadSuccess={() => {}}
+                  />
+                  {certDoc && isReplacingCert && (
+                    <button 
+                      onClick={() => setIsReplacingCert(false)} 
+                      className="btn btn-sm" 
+                      style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.35rem 0.75rem', fontSize: '0.8125rem', background: 'var(--surface-bg)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', zIndex: 10 }}
+                    >
+                      Cancel Replace
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
 
-          {uploading && <div style={{ fontSize: '0.875rem', color: 'var(--success)' }}>Uploading file...</div>}
-
           {/* Submit Action */}
-          {isDraft && (
-            <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.75rem' }}>
-              {!canSubmit && (
-                <p style={{ fontSize: '0.8125rem', color: 'var(--warning)' }}>
-                  ⚠️ Please fill out all personal details and upload both a Government ID and a Certification.
-                </p>
-              )}
-              <button
-                onClick={handleSubmit}
-                disabled={!canSubmit}
-                className="btn btn-primary"
-              >
-                Submit Application
-              </button>
-            </div>
-          )}
+            {isDraft && (
+              <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                {!canSubmit && (
+                  <div className="alert alert-warning" style={{ fontSize: '0.875rem', padding: '0.75rem', width: '100%' }}>
+                    <strong>⚠️ Incomplete Application:</strong> Please complete the following required fields:
+                    <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
+                      {!firstName && <li>First Name</li>}
+                      {!lastName && <li>Last Name</li>}
+                      {!teachingSubject && <li>Teaching Subject</li>}
+                      {!govIdDoc && <li>Government ID (Upload)</li>}
+                      {!certDoc && <li>Certification (Upload)</li>}
+                    </ul>
+                  </div>
+                )}
+                <button 
+                  onClick={handleSubmit} 
+                  className="btn btn-primary" 
+                  disabled={!canSubmit}
+                  style={{ background: 'var(--brand-600)' }}
+                >
+                  Submit Application
+                </button>
+              </div>
+            )}
         </div>
       </div>
     </div>

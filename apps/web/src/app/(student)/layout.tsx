@@ -4,7 +4,6 @@ import { ROUTES } from '@nama/shared';
 
 const STUDENT_NAV = [
   { href: ROUTES.STUDENT_DASHBOARD, label: 'Dashboard', icon: '🏠' },
-  { href: ROUTES.STUDENT_COURSES, label: 'My Courses', icon: '📚' },
   { href: ROUTES.STUDENT_BOOKINGS, label: 'Bookings', icon: '📅' },
   { href: ROUTES.STUDENT_CERTIFICATES, label: 'Certificates', icon: '🎓' },
   { href: ROUTES.STUDENT_CHAT, label: 'Chat', icon: '💬' },

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course, CourseModule, CoursePricing } from '@nama/shared';
 import Link from 'next/link';
+import { getErrorMessage } from '@/lib/error';
 
 export default function AdminReviewCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -26,13 +27,13 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
   const fetchCourse = async () => {
     try {
       const res = await coursesApi.adminGetCourse(id);
-      const courseData = res.data?.course as any;
+      const courseData = res.data?.course as Course & { modules?: CourseModule[], pricings?: CoursePricing[] };
       setCourse(courseData || null);
       if (courseData?.pricings?.[0]) {
         setFinalPrice(courseData.pricings[0].amount);
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch course');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch course'));
     } finally {
       setLoading(false);
     }
@@ -52,8 +53,8 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
       
       alert('Review submitted successfully!');
       router.push('/admin/courses');
-    } catch (err: any) {
-      alert(err.message || 'Failed to submit review');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to submit review'));
     } finally {
       setSubmitting(false);
     }
@@ -66,8 +67,8 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
       await coursesApi.adminPublishCourse(id);
       alert('Course published successfully!');
       router.push('/admin/courses');
-    } catch (err: any) {
-      alert(err.message || 'Failed to publish course');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to publish course'));
     }
   };
 
@@ -176,7 +177,7 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
             
             <div>
               <label className="label">Decision</label>
-              <select className="input" value={reviewStatus} onChange={e => setReviewStatus(e.target.value as any)} required>
+              <select className="input" value={reviewStatus} onChange={e => setReviewStatus(e.target.value as 'APPROVED' | 'CHANGES_REQUESTED' | 'REJECTED')} required>
                 <option value="APPROVED">Approve</option>
                 <option value="CHANGES_REQUESTED">Request Changes</option>
                 <option value="REJECTED">Reject</option>

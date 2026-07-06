@@ -1,5 +1,3 @@
-'use client';
-
 import type { ApiResponse } from '@nama/shared';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000/api/v1';
@@ -16,10 +14,18 @@ export class ApiError extends Error {
   }
 }
 
-// Retrieves the stored access token from localStorage
-function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('nama_access_token');
+// Retrieves the stored access token from cookies if on the server
+async function getServerAccessToken(): Promise<string | null> {
+  if (typeof window === 'undefined') {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      return cookieStore.get('nama_access_token')?.value || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 interface FetchOptions extends RequestInit {
@@ -36,12 +42,15 @@ export async function apiFetch<T>(
   headers.set('Content-Type', 'application/json');
 
   if (auth) {
-    const token = getAccessToken();
-    if (token) headers.set('Authorization', `Bearer ${token}`);
+    const token = await getServerAccessToken();
+    if (token) {
+      headers.set('Cookie', `nama_access_token=${token}`);
+    }
   }
 
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
+    credentials: 'include', // Important for sending cookies from the browser
     headers,
   });
 

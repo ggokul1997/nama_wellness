@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ROUTES } from '@nama/shared';
 import { categoriesApi } from '@/lib/api/categories';
 import type { Category } from '@nama/shared';
+import { useAuthStore } from '@/stores/auth.store';
 
 
 
@@ -16,8 +17,19 @@ const STATS = [
 ];
 
 export default function LandingPage() {
+  const { isAuthenticated, getActiveRole } = useAuthStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getDashboardRoute = () => {
+    switch (getActiveRole()) {
+      case 'ADMIN': return ROUTES.ADMIN_DASHBOARD;
+      case 'TEACHER': return ROUTES.TEACHER_DASHBOARD;
+      case 'COMPANY_ADMIN': return ROUTES.COMPANY_ADMIN_DASHBOARD;
+      case 'EMPLOYEE': return ROUTES.EMPLOYEE_DASHBOARD;
+      default: return ROUTES.STUDENT_DASHBOARD;
+    }
+  };
   
   useEffect(() => {
     categoriesApi.getAll().then(res => {
@@ -29,38 +41,7 @@ export default function LandingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--surface-bg)', overflow: 'hidden' }}>
-      {/* Nav */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(8,8,18,0.85)', backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--surface-border)',
-        padding: '0 1.5rem',
-      }}>
-        <div style={{
-          maxWidth: 1280, margin: '0 auto', height: 64,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'var(--gradient-brand)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.1rem', boxShadow: '0 0 16px rgba(139,92,246,0.4)',
-            }}>🌿</div>
-            <span style={{ fontWeight: 700, fontSize: '1.125rem', color: 'var(--text-primary)' }}>
-              Nama <span className="text-gradient">Wellness</span>
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <Link href={ROUTES.LOGIN} className="btn btn-ghost btn-sm">
-              Sign in
-            </Link>
-            <Link href={ROUTES.REGISTER} className="btn btn-primary btn-sm">
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+
 
       {/* Hero */}
       <section style={{ padding: '6rem 1.5rem 4rem', textAlign: 'center', position: 'relative' }}>
@@ -97,12 +78,20 @@ export default function LandingPage() {
           </p>
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href={ROUTES.REGISTER} className="btn btn-primary btn-lg">
-              Start Learning Free
-            </Link>
-            <Link href={ROUTES.LOGIN} className="btn btn-secondary btn-lg">
-              I'm a Teacher
-            </Link>
+            {isAuthenticated ? (
+              <Link href={getDashboardRoute()} className="btn btn-primary btn-lg">
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href={ROUTES.REGISTER} className="btn btn-primary btn-lg">
+                  Start Learning Free
+                </Link>
+                <Link href={ROUTES.LOGIN} className="btn btn-secondary btn-lg">
+                  I'm a Teacher
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -178,25 +167,27 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Banner */}
-      <section style={{ padding: '4rem 1.5rem' }}>
-        <div style={{
-          maxWidth: 900, margin: '0 auto', textAlign: 'center',
-          padding: '3rem', borderRadius: 'var(--radius-xl)',
-          background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.08))',
-          border: '1px solid var(--surface-border-strong)',
-          boxShadow: 'var(--shadow-glow)',
-        }}>
-          <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1rem' }}>
-            Ready to start your wellness journey?
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            Join thousands of students and teachers on Nama Wellness.
-          </p>
-          <Link href={ROUTES.REGISTER} className="btn btn-primary btn-lg">
-            Create Free Account
-          </Link>
-        </div>
-      </section>
+      {!isAuthenticated && (
+        <section style={{ padding: '4rem 1.5rem' }}>
+          <div style={{
+            maxWidth: 900, margin: '0 auto', textAlign: 'center',
+            padding: '3rem', borderRadius: 'var(--radius-xl)',
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.08))',
+            border: '1px solid var(--surface-border-strong)',
+            boxShadow: 'var(--shadow-glow)',
+          }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+              Ready to start your wellness journey?
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              Join thousands of students and teachers on Nama Wellness.
+            </p>
+            <Link href={ROUTES.REGISTER} className="btn btn-primary btn-lg">
+              Create Free Account
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer style={{

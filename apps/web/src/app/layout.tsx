@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AuthProvider } from '@/lib/auth/session';
+import { Navigation } from '@/components/ui/Navigation';
 
 export const metadata: Metadata = {
   title: {
@@ -18,7 +20,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          <div className="layout-wrapper">
+            <Navigation />
+            
+            <main className="main-content">
+              {children}
+            </main>
+          </div>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

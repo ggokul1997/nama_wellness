@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { categoriesApi } from '@/lib/api/categories';
 import type { Category } from '@nama/shared';
+import { getErrorMessage } from '@/lib/error';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -18,8 +19,8 @@ export default function CategoriesPage() {
     try {
       const res = await categoriesApi.getAll();
       setCategories(res.data?.categories || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch categories');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch categories'));
     } finally {
       setLoading(false);
     }
@@ -30,8 +31,8 @@ export default function CategoriesPage() {
     try {
       await categoriesApi.delete(id);
       setCategories(categories.filter(c => c.id !== id));
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete category');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to delete category'));
     }
   };
 
