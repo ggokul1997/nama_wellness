@@ -52,6 +52,17 @@ export const coursesService = {
     return course;
   },
 
+  async getPublicCourseById(id: string) {
+    const course = await coursesRepository.findPublishedById(id);
+    if (!course) throw Errors.notFound('Course not found');
+
+    if (course.coverImageUrl) {
+      course.coverImageUrl = await s3Utils.signDocumentUrl(course.coverImageUrl);
+    }
+
+    return course;
+  },
+
   async getCourseById(id: string, userId: string) {
     const course = await coursesRepository.findById(id);
     if (!course) throw Errors.notFound('Course not found');

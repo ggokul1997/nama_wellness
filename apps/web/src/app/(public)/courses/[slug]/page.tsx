@@ -34,7 +34,9 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
   };
 
   const handleEnroll = () => {
-    alert('Enrollment checkout coming soon!');
+    if (course) {
+      router.push(`/checkout/${course.id}`);
+    }
   };
 
   if (loading) {

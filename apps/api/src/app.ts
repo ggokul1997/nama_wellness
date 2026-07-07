@@ -29,7 +29,12 @@ export function createApp(): express.Express {
   app.use(compression());
 
   // Body parsing
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ 
+    limit: '10mb',
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    }
+  }));
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
 

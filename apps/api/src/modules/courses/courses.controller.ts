@@ -22,6 +22,15 @@ export const coursesController = {
     }
   },
 
+  async getPublicCourseById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const course = await coursesService.getPublicCourseById(req.params.id as string);
+      res.json({ success: true, data: { course } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   // Teacher Methods
   async getMyCourses(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

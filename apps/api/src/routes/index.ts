@@ -7,6 +7,7 @@ import coursesRoutes from '../modules/courses/courses.routes.js';
 import { studyMaterialsRoutes } from '../modules/study-materials/study-materials.routes.js';
 import { enrollmentsRoutes } from '../modules/enrollments/enrollments.routes.js';
 import { storageRouter } from '../modules/storage/storage.routes.js';
+import { paymentsRouter } from '../modules/payments/payments.routes.js';
 
 export const v1Router: Router = Router();
 
@@ -31,6 +32,7 @@ v1Router.use('/courses', coursesRoutes);
 v1Router.use('/study-materials', studyMaterialsRoutes);
 v1Router.use('/enrollments', enrollmentsRoutes);
 v1Router.use('/uploads', storageRouter);
+v1Router.use('/payments', paymentsRouter);
 
 // Sprint B onwards — routes added here:
 // v1Router.use('/teacher', teacherRouter);

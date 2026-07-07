@@ -11,6 +11,9 @@ export const coursesApi = {
   getPublicCourseBySlug: (slug: string) =>
     apiFetch<{ course: Course }>(`/courses/public/${slug}`),
 
+  getPublicCourseById: (id: string) => 
+    apiFetch<{ course: Course }>(`/courses/public/id/${id}`),
+
   getCourse: (id: string) => 
     apiFetch<{ course: Course }>(`/courses/${id}`),
 

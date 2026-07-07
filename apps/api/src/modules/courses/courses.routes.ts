@@ -9,6 +9,7 @@ const router: Router = Router();
 // For now, these are completely public
 router.get('/public', coursesController.getPublicCourses);
 router.get('/public/:slug', coursesController.getPublicCourseBySlug);
+router.get('/public/id/:id', coursesController.getPublicCourseById);
 
 // All course routes below this require authentication
 router.use(authenticate);

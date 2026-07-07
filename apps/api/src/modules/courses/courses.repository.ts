@@ -53,6 +53,17 @@ export const coursesRepository = {
     });
   },
 
+  async findPublishedById(id: string) {
+    return prisma.course.findUnique({
+      where: { id, status: 'PUBLISHED' },
+      include: { 
+        category: true, 
+        teacher: { include: { profile: true } }, 
+        pricings: { where: { isCurrent: true } },
+      },
+    });
+  },
+
   async findById(id: string) {
     return prisma.course.findUnique({
       where: { id },
