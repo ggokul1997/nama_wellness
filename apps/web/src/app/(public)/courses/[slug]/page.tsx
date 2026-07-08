@@ -5,26 +5,55 @@ import { useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course, CourseModule, Lesson } from '@nama/shared';
 import { getErrorMessage } from '@/lib/error';
+import { useAuth } from '@/lib/auth/session';
+import { enrollmentsApi } from '@/lib/api/enrollments';
 
 export default function PublicCourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
   const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
     if (slug) fetchCourse();
   }, [slug]);
 
+  // Check enrollment status when user or course changes
+  useEffect(() => {
+    console.log(`[DEBUG] checkEnrollment effect triggered`, { courseId: course?.id, user: user?.id, authLoading });
+    const checkEnrollment = async () => {
+      if (course && user) {
+        try {
+          console.log(`[DEBUG] calling getCourseProgress for course ${course.id}`);
+          await enrollmentsApi.getCourseProgress(course.id);
+          console.log(`[DEBUG] getCourseProgress success`);
+          setIsEnrolled(true);
+        } catch (e) {
+          console.log(`[DEBUG] getCourseProgress failed`, e);
+          setIsEnrolled(false);
+        }
+      } else {
+        console.log(`[DEBUG] not checking enrollment, missing course or user`);
+        setIsEnrolled(false);
+      }
+    };
+    if (!authLoading) {
+      checkEnrollment();
+    }
+  }, [course, user, authLoading]);
+
   const fetchCourse = async () => {
     try {
       const res = await coursesApi.getPublicCourseBySlug(slug);
-      setCourse(res.data?.course as Course || null);
-      if (res.data?.course?.modules?.[0]) {
-        setExpandedModule(res.data.course.modules[0].id);
+      const fetchedCourse = res.data?.course as Course || null;
+      setCourse(fetchedCourse);
+      if (fetchedCourse?.modules?.[0]) {
+        setExpandedModule(fetchedCourse.modules[0].id);
       }
     } catch (err: unknown) {
       setError(getErrorMessage(err, 'Failed to load course details'));
@@ -35,7 +64,11 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
 
   const handleEnroll = () => {
     if (course) {
-      router.push(`/checkout/${course.id}`);
+      if (isEnrolled) {
+        router.push(`/student/courses/${course.slug}/learn`);
+      } else {
+        router.push(`/checkout/${course.id}`);
+      }
     }
   };
 
@@ -182,13 +215,15 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
               </h2>
             </div>
             
-            <button 
-              onClick={handleEnroll}
-              className="btn btn-primary" 
-              style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', fontWeight: 600, display: 'flex', justifyContent: 'center' }}
-            >
-              Enroll Now
-            </button>
+            {(!user || !user.roles.some(r => r.role === 'ADMIN' || r.role === 'TEACHER')) && (
+              <button 
+                onClick={handleEnroll}
+                className="btn btn-primary" 
+                style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', fontWeight: 600, display: 'flex', justifyContent: 'center' }}
+              >
+                {isEnrolled ? 'Start Learning' : 'Enroll Now'}
+              </button>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '1.5rem', borderTop: '1px solid var(--surface-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>

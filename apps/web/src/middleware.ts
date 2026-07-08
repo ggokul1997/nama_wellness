@@ -8,12 +8,12 @@ import type { NextRequest } from 'next/server';
 const PUBLIC_PATHS = [
   '/',
   '/courses',
-  '/auth/login',
-  '/auth/register',
-  '/auth/verify-email',
-  '/auth/forgot-password',
-  '/auth/reset-password',
-  '/auth/register/corporate',
+  '/login',
+  '/register',
+  '/verify-email',
+  '/forgot-password',
+  '/reset-password',
+  '/register/corporate',
 ];
 
 const ROLE_PATHS: Record<string, string> = {
@@ -42,7 +42,7 @@ export function middleware(request: NextRequest) {
   const authRole = request.cookies.get('nama_auth_role')?.value;
 
   if (!authRole) {
-    const loginUrl = new URL('/auth/login', request.url);
+    const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -60,7 +60,7 @@ export function middleware(request: NextRequest) {
       if (portalEntry) {
         return NextResponse.redirect(new URL(`${portalEntry[0]}/dashboard`, request.url));
       }
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 

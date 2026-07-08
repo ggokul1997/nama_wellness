@@ -1,10 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
-import { authApi } from '@/lib/api/auth';
-import { ROUTES } from '@nama/shared';
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth/session';
 
 interface NavItem {
   href: string;
@@ -21,15 +19,11 @@ interface SidebarProps {
 
 export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(--brand-500)' }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, clearAuth, refreshToken } = useAuthStore();
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    if (refreshToken) {
-      await authApi.logout(refreshToken).catch(() => {});
-    }
-    clearAuth();
-    router.push(ROUTES.LOGIN);
+    await logout();
+    // the logout method itself redirects to /login.
   };
 
   return (

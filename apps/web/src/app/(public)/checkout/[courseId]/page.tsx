@@ -4,14 +4,15 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import { paymentsApi } from '@/lib/api/payments';
+import { enrollmentsApi } from '@/lib/api/enrollments';
 import type { Course } from '@nama/shared';
 import Script from 'next/script';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuth } from '@/lib/auth/session';
 
 export default function CheckoutPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, isLoading: authLoading } = useAuth();
   const courseId = params.courseId as string;
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -23,8 +24,21 @@ export default function CheckoutPage() {
     const fetchCourse = async () => {
       try {
         const res = await coursesApi.getPublicCourseById(courseId);
-        if (res.data?.course) {
-          setCourse(res.data.course);
+        const fetchedCourse = res.data?.course;
+        if (fetchedCourse) {
+          setCourse(fetchedCourse);
+          
+          // Verify they aren't already enrolled
+          if (user) {
+            try {
+              await enrollmentsApi.getCourseProgress(fetchedCourse.id);
+              // If successful, they are enrolled! Redirect them.
+              router.replace(`/student/courses/${fetchedCourse.slug}/learn`);
+              return; // Stop loading state from clearing, let it redirect
+            } catch (e) {
+              // Not enrolled, which is correct for checkout
+            }
+          }
         } else {
           setError('Course not found');
         }
@@ -34,8 +48,10 @@ export default function CheckoutPage() {
         setLoading(false);
       }
     };
-    fetchCourse();
-  }, [courseId]);
+    if (!authLoading) {
+      fetchCourse();
+    }
+  }, [courseId, user, authLoading, router]);
 
   const handleCheckout = async () => {
     setCheckoutLoading(true);
@@ -65,28 +81,71 @@ export default function CheckoutPage() {
         name: 'Nama Wellness',
         description: `Purchase: ${course?.title}`,
         order_id: orderId,
-        handler: function (response: any) {
+        handler: async function (response: any) {
           // Razorpay returns razorpay_payment_id, razorpay_order_id, razorpay_signature on success
-          // Since our webhook handles fulfillment, we just redirect the user
-          router.push(`/checkout/success?session_id=${response.razorpay_order_id}`);
+          setCheckoutLoading(true);
+          try {
+            await paymentsApi.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            router.push(`/checkout/success?session_id=${response.razorpay_order_id}`);
+          } catch (err: any) {
+            setError(err.message || 'Payment verification failed');
+            setCheckoutLoading(false);
+          }
         },
         prefill: {
           email: user?.email || '',
+          contact: '9999999999' // Dummy contact helps Razorpay show mobile-friendly payment methods like UPI
         },
         theme: {
           color: '#3399cc',
         },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay using UPI',
+                instruments: [
+                  {
+                    method: 'upi'
+                  }
+                ]
+              },
+              other: {
+                name: 'Other Payment Modes',
+                instruments: [
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                  { method: 'wallet' }
+                ]
+              }
+            },
+            sequence: ['block.upi', 'block.other'],
+            preferences: {
+              show_default_blocks: true,
+            }
+          }
+        },
         modal: {
-          ondismiss: function() {
+          ondismiss: async function() {
             setCheckoutLoading(false);
+            if (orderId) {
+              try { await paymentsApi.cancelOrder(orderId); } catch(e) {}
+            }
           }
         }
       };
 
       const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any){
+      rzp.on('payment.failed', async function (response: any){
         setError(response.error.description || 'Payment Failed');
         setCheckoutLoading(false);
+        if (orderId) {
+          try { await paymentsApi.cancelOrder(orderId); } catch(e) {}
+        }
       });
       rzp.open();
     } catch (err: any) {

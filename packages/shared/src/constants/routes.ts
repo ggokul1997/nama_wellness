@@ -5,12 +5,12 @@ export const API_VERSION = '/api/v1';
 export const ROUTES = {
   // Public
   HOME: '/',
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register',
-  REGISTER_CORPORATE: '/auth/register/corporate',
-  VERIFY_EMAIL: '/auth/verify-email',
-  FORGOT_PASSWORD: '/auth/forgot-password',
-  RESET_PASSWORD: '/auth/reset-password',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  REGISTER_CORPORATE: '/register/corporate',
+  VERIFY_EMAIL: '/verify-email',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
 
   // Student portal
   STUDENT_DASHBOARD: '/student/dashboard',

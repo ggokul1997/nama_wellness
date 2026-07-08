@@ -25,9 +25,22 @@ export const paymentsApi = {
     });
   },
 
+  verifyPayment: (data: { razorpay_order_id: string, razorpay_payment_id: string, razorpay_signature: string }) => {
+    return apiFetch<{ verified: boolean }>('/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   getMyTransactions: () => {
     return apiFetch<{ transactions: PopulatedTransaction[] }>('/payments/transactions/me', {
       method: 'GET',
+    });
+  },
+
+  cancelOrder: (orderId: string) => {
+    return apiFetch<{ cancelled: boolean }>(`/payments/orders/${orderId}/cancel`, {
+      method: 'PUT',
     });
   },
 };

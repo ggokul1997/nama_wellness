@@ -35,7 +35,13 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
           router.replace(ROUTES.TEACHER_ONBOARDING);
         }
       })
-      .catch(console.error)
+      .catch(err => {
+        if (err?.status === 401) {
+          router.push(ROUTES.LOGIN);
+        } else {
+          console.error(err);
+        }
+      })
       .finally(() => setLoading(false));
   }, [pathname, router]);
 

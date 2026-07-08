@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuth } from '@/lib/auth/session';
 import { teacherApplicationsApi } from '@/lib/api/teacher-applications';
 import { coursesApi } from '@/lib/api/courses';
 import { ROUTES } from '@nama/shared';
 
 export default function TeacherDashboard() {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const firstName = user?.profile?.firstName ?? 'Teacher';
 
   const [application, setApplication] = useState<any>(null);

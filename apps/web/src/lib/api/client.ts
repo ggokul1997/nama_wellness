@@ -1,6 +1,10 @@
 import type { ApiResponse } from '@nama/shared';
 
-const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000/api/v1';
+const isBrowser = typeof window !== 'undefined';
+// Server components need an absolute URL. Client components should use the relative Next.js rewrite to avoid cross-origin SameSite=Lax cookie drops.
+const API_URL = isBrowser 
+  ? '/api/v1' 
+  : (process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000/api/v1');
 
 export class ApiError extends Error {
   constructor(
@@ -30,13 +34,14 @@ async function getServerAccessToken(): Promise<string | null> {
 
 interface FetchOptions extends RequestInit {
   auth?: boolean; // attach Bearer token (default: true if token exists)
+  absoluteUrl?: boolean; // force absolute URL (bypassing proxy) to receive Set-Cookie
 }
 
 export async function apiFetch<T>(
   path: string,
   options: FetchOptions = {},
 ): Promise<ApiResponse<T>> {
-  const { auth = true, ...init } = options;
+  const { auth = true, absoluteUrl = false, ...init } = options;
 
   const headers = new Headers(init.headers);
   headers.set('Content-Type', 'application/json');
@@ -46,15 +51,29 @@ export async function apiFetch<T>(
     if (token) {
       headers.set('Cookie', `nama_access_token=${token}`);
     }
+    init.cache = init.cache || 'no-store';
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  // Force cache bust for authenticated requests in the browser
+  let finalPath = path;
+  if (auth && isBrowser) {
+    const separator = path.includes('?') ? '&' : '?';
+    finalPath = `${path}${separator}_t=${Date.now()}`;
+  }
+
+  console.log(`[DEBUG] apiFetch starting for ${path}`, { auth, finalPath, isBrowser, cookies: isBrowser ? document.cookie : 'server' });
+
+  const baseUrl = absoluteUrl ? (process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000/api/v1') : API_URL;
+
+  const response = await fetch(`${baseUrl}${finalPath}`, {
     ...init,
-    credentials: 'include', // Important for sending cookies from the browser
+    credentials: 'include',
     headers,
   });
 
   const data = (await response.json()) as ApiResponse<T>;
+  
+  console.log(`[DEBUG] apiFetch completed for ${path}`, { status: response.status, success: data.success, data });
 
   if (!data.success) {
     throw new ApiError(

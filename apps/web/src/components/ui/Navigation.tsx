@@ -2,26 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuth } from '@/lib/auth/session';
 import { ROUTES } from '@nama/shared';
 
 export function Navigation() {
-  const { user, isAuthenticated, clearAuth, getActiveRole } = useAuthStore();
+  const { user, logout } = useAuth();
+  const isAuthenticated = !!user;
+  const activeRole = user?.roles[0]?.role || null;
   const [mounted, setMounted] = useState(false);
-  const activeRole = getActiveRole();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/v1/auth/logout', { method: 'POST' });
-    } catch (e) {
-      console.error(e);
-    }
-    clearAuth();
-    window.location.href = ROUTES.LOGIN;
+    await logout();
   };
 
   return (

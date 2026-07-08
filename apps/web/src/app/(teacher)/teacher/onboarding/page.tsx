@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuth } from '@/lib/auth/session';
 import { teacherApplicationsApi } from '@/lib/api/teacher-applications';
 import type { TeacherApplication, TeacherDocument, DocumentType } from '@nama/shared';
 import { getErrorMessage } from '@/lib/error';
 import { FileUpload } from '@/components/ui/FileUpload';
 
 export default function TeacherApplyPage() {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const [application, setApplication] = useState<TeacherApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,7 +42,11 @@ export default function TeacherApplyPage() {
         const startRes = await teacherApplicationsApi.startApplication();
         setApplication(startRes.data?.application ?? null);
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
+      if (err?.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
       setError(getErrorMessage(err, 'Failed to fetch application'));
     } finally {
       setLoading(false);

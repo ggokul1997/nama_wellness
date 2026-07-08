@@ -21,7 +21,16 @@ export class PaymentsService {
 
     const currentPrice = course.pricings?.find(p => p.isCurrent);
     if (!currentPrice || currentPrice.amount.toNumber() <= 0) {
-      // Free course logic
+      // Free course logic: Create transaction and enrollment immediately
+      const transaction = await paymentsRepository.createTransaction({
+        userId,
+        courseId,
+        amount: currentPrice ? currentPrice.amount : 0,
+        currency: 'INR',
+        razorpayOrderId: 'FREE_' + Date.now(),
+        status: 'SUCCESS'
+      });
+      await paymentsRepository.createEnrollment(userId, courseId, transaction.id);
       return { orderId: 'FREE', amount: 0, currency: 'INR' };
     }
 
@@ -120,6 +129,55 @@ export class PaymentsService {
 
     // Create Enrollment
     await paymentsRepository.createEnrollment(userId, courseId, transaction.id);
+  }
+
+  async verifyPayment(orderId: string, paymentId: string, signature: string) {
+    const webhookSecret = process.env.RAZORPAY_KEY_SECRET; // verification from frontend uses key_secret, not webhook secret
+    if (!webhookSecret) {
+      throw new Error('RAZORPAY_KEY_SECRET is not set');
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    if (expectedSignature !== signature) {
+      throw new Error('Payment signature verification failed');
+    }
+
+    const transaction = await paymentsRepository.getTransactionByOrderId(orderId);
+    if (!transaction) throw new Error('Transaction not found');
+    
+    if (transaction.status === 'SUCCESS') {
+      return { success: true };
+    }
+
+    // Update Transaction
+    await paymentsRepository.updateTransactionStatus(
+      transaction.id, 
+      'SUCCESS',
+      paymentId
+    );
+
+    // Create Enrollment
+    await paymentsRepository.createEnrollment(transaction.userId, transaction.courseId, transaction.id);
+
+    return { success: true };
+  }
+
+  async cancelOrder(orderId: string, userId: string) {
+    const transaction = await paymentsRepository.getTransactionByOrderId(orderId);
+    if (!transaction) throw new Error('Transaction not found');
+    
+    // Only allow canceling pending transactions belonging to the user
+    if (transaction.userId !== userId) throw new Error('Unauthorized');
+    if (transaction.status !== 'PENDING') {
+      return { success: true, message: 'Transaction is already processed' };
+    }
+
+    await paymentsRepository.updateTransactionStatus(transaction.id, 'FAILED');
+    return { success: true };
   }
 
   async getMyTransactions(userId: string) {

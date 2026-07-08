@@ -50,12 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading: false,
         error: 'Session expired',
       });
+      document.cookie = 'nama_auth_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     }
   };
 
   const logout = async () => {
     try {
-      await apiFetch('/auth/logout', { method: 'POST' });
+      await apiFetch('/auth/logout', { method: 'POST', absoluteUrl: true });
     } catch (err) {
       console.error('Logout failed:', err);
     } finally {

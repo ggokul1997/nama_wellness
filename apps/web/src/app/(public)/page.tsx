@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ROUTES } from '@nama/shared';
 import { categoriesApi } from '@/lib/api/categories';
 import type { Category } from '@nama/shared';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuth } from '@/lib/auth/session';
 
 
 
@@ -17,7 +17,9 @@ const STATS = [
 ];
 
 export default function LandingPage() {
-  const { isAuthenticated, getActiveRole } = useAuthStore();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+  const getActiveRole = () => user?.roles[0]?.role || null;
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
