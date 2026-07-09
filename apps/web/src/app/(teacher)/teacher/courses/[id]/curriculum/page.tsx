@@ -4,10 +4,12 @@ import { useState, useEffect, use } from 'react';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course, CourseModule, Lesson } from '@nama/shared';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getErrorMessage } from '@/lib/error';
 
 export default function CurriculumBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
@@ -209,9 +211,17 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
             {course.title}
           </p>
         </div>
-        <button onClick={openNewModule} className="btn btn-primary">
-          + Add Module
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button onClick={() => router.push(`/teacher/courses/${id}/sessions`)} className="btn btn-ghost" style={{ border: '1px solid var(--surface-border)' }}>
+            Live Sessions
+          </button>
+          <button onClick={() => router.push(`/teacher/courses/${id}/materials`)} className="btn btn-ghost" style={{ border: '1px solid var(--surface-border)' }}>
+            Study Materials
+          </button>
+          <button onClick={openNewModule} className="btn btn-primary">
+            + Add Module
+          </button>
+        </div>
       </div>
 
       {modules.length === 0 ? (

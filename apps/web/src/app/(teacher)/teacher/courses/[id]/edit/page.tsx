@@ -100,10 +100,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>Edit Course</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Update your course details below.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={() => router.push(`/teacher/courses/${id}/materials`)} className="btn btn-ghost" style={{ border: '1px solid var(--surface-border)' }}>
-            Study Materials
-          </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <button onClick={() => router.push(`/teacher/courses/${id}/curriculum`)} className="btn btn-secondary">
             Manage Curriculum
           </button>

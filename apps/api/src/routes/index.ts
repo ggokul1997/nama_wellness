@@ -9,7 +9,10 @@ import { enrollmentsRoutes } from '../modules/enrollments/enrollments.routes.js'
 import { storageRouter } from '../modules/storage/storage.routes.js';
 import { paymentsRouter } from '../modules/payments/payments.routes.js';
 import { companiesRouter } from '../modules/companies/companies.routes.js';
-
+import { reviewsRouter } from '../modules/reviews/reviews.routes.js';
+import { liveSessionsRouter } from '../modules/live-sessions/live-sessions.routes.js';
+import { certificatesRouter } from '../modules/certificates/certificates.routes.js';
+import { notificationsRouter } from '../modules/notifications/notifications.routes.js';
 export const v1Router: Router = Router();
 
 // Health check — no auth required
@@ -35,6 +38,9 @@ v1Router.use('/enrollments', enrollmentsRoutes);
 v1Router.use('/uploads', storageRouter);
 v1Router.use('/payments', paymentsRouter);
 v1Router.use('/companies', companiesRouter);
-
+v1Router.use('/reviews', reviewsRouter);
+v1Router.use('/live-sessions', liveSessionsRouter);
+v1Router.use('/certificates', certificatesRouter);
+v1Router.use('/notifications', notificationsRouter);
 // Sprint B onwards — routes added here:
 // v1Router.use('/teacher', teacherRouter);

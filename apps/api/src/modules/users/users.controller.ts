@@ -32,4 +32,23 @@ export const usersController = {
     const response: ApiResponse = { success: true, data: { profile }, message: 'Profile updated' };
     res.status(200).json(response);
   },
+
+  async getTeacherProfile(req: Request, res: Response): Promise<void> {
+    const teacherProfile = await prisma.teacherProfile.findUnique({
+      where: { userId: req.user!.sub },
+    });
+    
+    // If it doesn't exist, return defaults so UI can display 0
+    if (!teacherProfile) {
+      res.status(200).json({ 
+        success: true, 
+        data: { 
+          teacherProfile: { averageRating: 0, totalReviews: 0 } 
+        } 
+      });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: { teacherProfile } });
+  },
 };

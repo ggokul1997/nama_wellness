@@ -6,6 +6,9 @@ interface LessonSidebarProps {
   activeLesson: Lesson | null;
   onSelectLesson: (lesson: Lesson) => void;
   getLessonStatus: (lessonId: string) => string;
+  onClaimCertificate?: () => void;
+  onLeaveReview?: () => void;
+  claimingCert?: boolean;
 }
 
 export function LessonSidebar({ 
@@ -13,7 +16,10 @@ export function LessonSidebar({
   enrollment, 
   activeLesson, 
   onSelectLesson, 
-  getLessonStatus 
+  getLessonStatus,
+  onClaimCertificate,
+  onLeaveReview,
+  claimingCert
 }: LessonSidebarProps) {
   return (
     <aside style={{ width: '300px', borderRight: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', background: 'var(--surface-color)' }}>
@@ -71,6 +77,30 @@ export function LessonSidebar({
           </div>
         ))}
       </div>
+
+      {enrollment.status === 'COMPLETED' && (
+        <div style={{ padding: '1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {onClaimCertificate && (
+            <button 
+              onClick={onClaimCertificate} 
+              disabled={claimingCert}
+              className="btn btn-primary"
+              style={{ width: '100%', fontSize: '0.875rem' }}
+            >
+              {claimingCert ? 'Claiming...' : 'Claim Certificate 🎓'}
+            </button>
+          )}
+          {onLeaveReview && (
+            <button 
+              onClick={onLeaveReview}
+              className="btn btn-secondary"
+              style={{ width: '100%', fontSize: '0.875rem' }}
+            >
+              Leave a Review ⭐
+            </button>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

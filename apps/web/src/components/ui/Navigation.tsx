@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/session';
 import { ROUTES } from '@nama/shared';
+import { NotificationBell } from './NotificationBell';
 
 export function Navigation() {
   const { user, logout } = useAuth();
@@ -57,6 +58,7 @@ export function Navigation() {
         {mounted && (
           isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem' }}>
+              <NotificationBell />
               <span style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
               <button onClick={handleLogout} className="btn" style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)' }}>Logout</button>
             </div>

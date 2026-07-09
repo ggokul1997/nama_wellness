@@ -9,3 +9,4 @@ usersRouter.use(authenticate);
 
 usersRouter.get('/profile', usersController.getProfile);
 usersRouter.patch('/profile', usersController.updateProfile);
+usersRouter.get('/teacher-profile', usersController.getTeacherProfile);

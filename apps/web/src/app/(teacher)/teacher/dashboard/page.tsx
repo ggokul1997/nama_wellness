@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth/session';
 import { teacherApplicationsApi } from '@/lib/api/teacher-applications';
 import { coursesApi } from '@/lib/api/courses';
+import { usersApi } from '@/lib/api/users';
 import { ROUTES } from '@nama/shared';
 
 export default function TeacherDashboard() {
@@ -14,6 +15,7 @@ export default function TeacherDashboard() {
   const [application, setApplication] = useState<any>(null);
   const [loadingApp, setLoadingApp] = useState(true);
   const [courseCount, setCourseCount] = useState<number | null>(null);
+  const [teacherProfile, setTeacherProfile] = useState<any>(null);
 
   useEffect(() => {
     teacherApplicationsApi.getMyApplication()
@@ -21,9 +23,13 @@ export default function TeacherDashboard() {
         const app = res.data?.application;
         setApplication(app);
         if (app?.status === 'APPROVED') {
-          coursesApi.getMyCourses()
-            .then(r => setCourseCount(r.data?.courses?.length ?? 0))
-            .catch(() => setCourseCount(0));
+          Promise.all([
+            coursesApi.getMyCourses(),
+            usersApi.getTeacherProfile()
+          ]).then(([coursesRes, profileRes]) => {
+            setCourseCount(coursesRes.data?.courses?.length ?? 0);
+            setTeacherProfile(profileRes.data?.teacherProfile);
+          }).catch(console.error);
         }
       })
       .catch(console.error)
@@ -49,7 +55,7 @@ export default function TeacherDashboard() {
       }}>
         {[
           { label: 'My Courses', value: courseCount !== null ? String(courseCount) : '—', icon: '📚' },
-          { label: 'Total Students', value: '—', icon: '👥' },
+          { label: 'Average Rating', value: teacherProfile?.averageRating ? `${teacherProfile.averageRating} ⭐ (${teacherProfile.totalReviews})` : '—', icon: '🌟' },
           { label: 'Sessions This Month', value: '—', icon: '📅' },
           { label: 'Earnings (₹)', value: '—', icon: '💰' },
         ].map((m, i) => (
