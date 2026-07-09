@@ -90,7 +90,7 @@ export default function LandingPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', justifyContent: 'center', textAlign: 'left' }}>
                 
                 {/* EDPRO Section */}
-                <div style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius-xl)', padding: '2rem', border: '1px solid var(--surface-border)' }}>
+                <div data-theme="teacher" style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius-xl)', padding: '2rem', border: '1px solid var(--surface-border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--brand-900)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>🌟</div>
                     <div>
@@ -103,7 +103,7 @@ export default function LandingPage() {
                       <div style={{ fontSize: '2rem' }}>🎓</div>
                       <div>
                         <h3 style={{ color: 'var(--text-primary)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Student</h3>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Start learning free</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Login to start learning</p>
                       </div>
                     </Link>
                     <Link href={ROUTES.LOGIN} className="glass-card" style={{ padding: '1.25rem', textDecoration: 'none', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
@@ -114,12 +114,17 @@ export default function LandingPage() {
                       </div>
                     </Link>
                   </div>
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <Link href={ROUTES.REGISTER} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                      Create EDPRO Account
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Corporate Wellness Section */}
-                <div style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius-xl)', padding: '2rem', border: '1px solid var(--surface-border)' }}>
+                <div data-theme="company_admin" style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius-xl)', padding: '2rem', border: '1px solid var(--surface-border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>🏢</div>
+                    <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--brand-900)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>🏢</div>
                     <div>
                       <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Corporate Wellness</h2>
                       <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>B2B learning for organizations</p>
@@ -129,16 +134,21 @@ export default function LandingPage() {
                     <Link href={ROUTES.LOGIN} className="glass-card" style={{ padding: '1.25rem', textDecoration: 'none', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
                       <div style={{ fontSize: '2rem' }}>🛡️</div>
                       <div>
-                        <h3 style={{ color: 'var(--success)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Corporate Admin</h3>
+                        <h3 style={{ color: 'var(--brand-500)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Corporate Admin</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Manage your team</p>
                       </div>
                     </Link>
                     <Link href={ROUTES.LOGIN} className="glass-card" style={{ padding: '1.25rem', textDecoration: 'none', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
                       <div style={{ fontSize: '2rem' }}>💼</div>
                       <div>
-                        <h3 style={{ color: 'var(--info)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Employee</h3>
+                        <h3 style={{ color: 'var(--brand-300)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Employee</h3>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Access company courses</p>
                       </div>
+                    </Link>
+                  </div>
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <Link href="/register/corporate" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                      Create Corporate Account
                     </Link>
                   </div>
                 </div>

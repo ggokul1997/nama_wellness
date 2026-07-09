@@ -342,12 +342,12 @@ textarea.input {
 .btn-primary {
   background: var(--gradient-brand);
   color: #fff;
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 4px 16px var(--surface-border-strong);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -355,13 +355,13 @@ textarea.input {
 }
 
 .btn-secondary {
-  background: rgba(139, 92, 246, 0.1);
+  background: var(--surface-border);
   color: var(--brand-300);
   border: 1px solid var(--surface-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(139, 92, 246, 0.2);
+  background: var(--surface-border-strong);
   border-color: var(--brand-500);
   transform: translateY(-1px);
 }
