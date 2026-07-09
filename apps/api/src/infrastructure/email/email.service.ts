@@ -19,6 +19,21 @@ let transporter: Transporter | null = null;
 async function getTransporter(): Promise<Transporter> {
   if (transporter) return transporter;
 
+  // Use custom SMTP if provided (e.g., Mailpit via Docker)
+  if (config.SMTP_HOST) {
+    transporter = nodemailer.createTransport({
+      host: config.SMTP_HOST,
+      port: config.SMTP_PORT || 1025,
+      secure: false,
+      auth: config.SMTP_USER ? {
+        user: config.SMTP_USER,
+        pass: config.SMTP_PASS || '',
+      } : undefined,
+    });
+    logger.info({ host: config.SMTP_HOST, port: config.SMTP_PORT || 1025 }, '📧 Custom SMTP configured');
+    return transporter;
+  }
+
   if (config.ETHEREAL_USER && config.ETHEREAL_PASS) {
     // Reuse existing test account from .env
     transporter = nodemailer.createTransport({
@@ -80,10 +95,12 @@ async function sendEmail(options: SendEmailOptions): Promise<void> {
     text: options.text,
   });
 
-  // Log the Ethereal preview URL so you can view the email immediately
+  // Log the preview URL (only applies to Ethereal)
   const previewUrl = nodemailer.getTestMessageUrl(info);
   if (previewUrl) {
     logger.info({ to: options.to, subject: options.subject, previewUrl }, '📧 Email sent — view at preview URL');
+  } else {
+    logger.info({ to: options.to, subject: options.subject }, '📧 Email sent');
   }
 }
 
@@ -127,6 +144,29 @@ export const emailService = {
         </div>
       `,
       text: `Your Nama Wellness password reset code is: ${otp}\nExpires in 15 minutes.`,
+    });
+  },
+
+  async sendEmployeeInviteOTP(email: string, otp: string, companyName: string): Promise<void> {
+    await sendEmail({
+      to: email,
+      subject: `You have been invited to join ${companyName} on Nama Wellness`,
+      html: `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #0f0f1a; color: #e2e8f0; border-radius: 12px;">
+          <h1 style="color: #a78bfa; font-size: 24px; margin-bottom: 8px;">Nama Wellness</h1>
+          <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Welcome to ${companyName}!</h2>
+          <p style="color: #94a3b8; margin-bottom: 24px;">Your company has invited you to join their learning platform on Nama Wellness.</p>
+          <p style="color: #94a3b8; margin-bottom: 24px;">Please click the button below to navigate to the <strong>Reset Password</strong> page and use the setup code to set your initial password. This code expires in 15 minutes.</p>
+          <div style="text-align: center; margin-bottom: 24px;">
+            <a href="${config.WEB_BASE_URL}/reset-password?email=${encodeURIComponent(email)}" style="display: inline-block; background: #8b5cf6; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">Set Up Account</a>
+          </div>
+          <div style="background: #1e1b4b; border: 1px solid #4c1d95; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 36px; font-weight: 700; letter-spacing: 12px; color: #c4b5fd;">${otp}</span>
+          </div>
+          <p style="color: #64748b; font-size: 13px;">If you weren't expecting this invitation, please ignore this email.</p>
+        </div>
+      `,
+      text: `You have been invited to join ${companyName} on Nama Wellness. Your setup code is: ${otp}\nExpires in 15 minutes.`,
     });
   },
 };

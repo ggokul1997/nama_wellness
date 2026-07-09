@@ -4,6 +4,7 @@ import { Errors } from '../../utils/errors.js';
 import type { UpdateLessonProgressInput } from '@nama/shared';
 import type { LessonProgress } from '@prisma/client';
 import { authRepository } from '../auth/auth.repository.js';
+import { prisma } from '../../infrastructure/database/prisma.client.js';
 
 export const enrollmentsService = {
   async adminAssignCourse(userEmail: string, courseId: string) {
@@ -45,6 +46,89 @@ export const enrollmentsService = {
         totalLessons,
         overallProgressPercent: progressPercent
       };
+    });
+  },
+
+  async getCompanyAvailableCourses(userId: string) {
+    const employeeRecords = await prisma.companyEmployee.findMany({
+      where: { userId },
+      include: { company: true }
+    });
+    
+    if (!employeeRecords.length) return [];
+    
+    const companyIds = employeeRecords.map(e => e.companyId);
+    
+    // Fetch licenses
+    const allLicenses = await prisma.companyLicense.findMany({
+      where: {
+        companyId: { in: companyIds },
+      },
+      include: {
+        course: { select: { id: true, title: true, coverImageUrl: true, description: true } },
+        company: { select: { name: true } }
+      }
+    });
+
+    // Filter licenses where usedSeats < totalSeats
+    return allLicenses.filter(l => l.usedSeats < l.totalSeats);
+  },
+
+  async enrollViaCompany(userId: string, courseId: string) {
+    return prisma.$transaction(async (tx) => {
+      // 1. Check if user is already enrolled
+      const existing = await tx.enrollment.findUnique({
+        where: { userId_courseId: { userId, courseId } }
+      });
+      if (existing) {
+        throw Errors.badRequest('User is already enrolled in this course');
+      }
+
+      // 2. Find user's companies
+      const employeeRecords = await tx.companyEmployee.findMany({
+        where: { userId }
+      });
+      const companyIds = employeeRecords.map(e => e.companyId);
+      
+      if (companyIds.length === 0) {
+        throw Errors.forbidden('User does not belong to any company');
+      }
+
+      // 3. Find an available license for this course
+      const license = await tx.companyLicense.findFirst({
+        where: {
+          courseId,
+          companyId: { in: companyIds }
+        }
+      });
+
+      if (!license || license.usedSeats >= license.totalSeats) {
+        throw Errors.badRequest('No available seats for this course in your company');
+      }
+
+      // 4. Atomically increment usedSeats
+      const updatedLicense = await tx.companyLicense.updateMany({
+        where: {
+          id: license.id,
+          usedSeats: license.usedSeats // Optimistic locking
+        },
+        data: {
+          usedSeats: { increment: 1 }
+        }
+      });
+
+      if (updatedLicense.count === 0) {
+        throw Errors.badRequest('Seat was taken by someone else. Please try again.');
+      }
+
+      // 5. Create enrollment
+      return tx.enrollment.create({
+        data: {
+          userId,
+          courseId,
+          status: 'ACTIVE'
+        }
+      });
     });
   },
 

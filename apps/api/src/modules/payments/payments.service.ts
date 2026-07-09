@@ -2,6 +2,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { paymentsRepository } from './payments.repository.js';
 import { coursesRepository } from '../courses/courses.repository.js';
+import { companiesRepository } from '../companies/companies.repository.js';
 
 // Initialize Razorpay (dummy key if not provided)
 const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_dummy';
@@ -53,6 +54,46 @@ export class PaymentsService {
       courseId,
       amount: currentPrice.amount,
       currency: currentPrice.currency,
+      razorpayOrderId: order.id,
+      status: 'PENDING'
+    });
+
+    return { 
+      orderId: order.id, 
+      amount: order.amount, 
+      currency: order.currency 
+    };
+  }
+
+  async createB2BOrder(adminId: string, companyId: string, courseId: string, seats: number) {
+    const course = await coursesRepository.findById(courseId);
+    if (!course) throw new Error('Course not found');
+    
+    if (!course.isAvailableForCorporate || !course.corporatePrice) {
+      throw new Error('Course is not available for corporate purchase');
+    }
+
+    const totalAmount = course.corporatePrice.toNumber() * seats;
+    const amountInPaise = Math.round(totalAmount * 100);
+
+    const order = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: 'INR',
+      receipt: `b2b_${companyId}_${courseId}`.substring(0, 40),
+      notes: {
+        type: 'B2B',
+        userId: adminId, // The admin making the purchase
+        courseId,
+        companyId,
+        seats: seats.toString(),
+      }
+    });
+
+    await paymentsRepository.createTransaction({
+      userId: adminId,
+      courseId,
+      amount: totalAmount,
+      currency: 'INR',
       razorpayOrderId: order.id,
       status: 'PENDING'
     });
@@ -127,8 +168,15 @@ export class PaymentsService {
       entity.id // this will be the payment_id if event is payment.captured
     );
 
-    // Create Enrollment
-    await paymentsRepository.createEnrollment(userId, courseId, transaction.id);
+    if (notes.type === 'B2B' && notes.companyId && notes.seats) {
+      const seats = parseInt(notes.seats, 10);
+      if (seats > 0) {
+        await companiesRepository.purchaseLicense(notes.companyId, courseId, seats);
+      }
+    } else {
+      // Create Enrollment for B2C
+      await paymentsRepository.createEnrollment(userId, courseId, transaction.id);
+    }
   }
 
   async verifyPayment(orderId: string, paymentId: string, signature: string) {
@@ -160,8 +208,19 @@ export class PaymentsService {
       paymentId
     );
 
-    // Create Enrollment
-    await paymentsRepository.createEnrollment(transaction.userId, transaction.courseId, transaction.id);
+    // Fetch order to read notes
+    const order = await razorpay.orders.fetch(orderId);
+    const notes = order.notes as any;
+
+    if (notes && notes.type === 'B2B' && notes.companyId && notes.seats) {
+      const seats = parseInt(notes.seats, 10);
+      if (seats > 0) {
+        await companiesRepository.purchaseLicense(notes.companyId, transaction.courseId, seats);
+      }
+    } else {
+      // Create Enrollment
+      await paymentsRepository.createEnrollment(transaction.userId, transaction.courseId, transaction.id);
+    }
 
     return { success: true };
   }
@@ -182,6 +241,50 @@ export class PaymentsService {
 
   async getMyTransactions(userId: string) {
     return paymentsRepository.getTransactionsByUser(userId);
+  }
+
+  async getTeacherEarnings(teacherId: string) {
+    const transactions = await paymentsRepository.getTeacherTransactions(teacherId);
+    
+    let totalSalesCount = 0;
+    let grossRevenue = 0;
+    let totalEarnings = 0;
+
+    const TEACHER_CUT_PERCENTAGE = 0.70; // 70%
+
+    const recentTransactions = transactions.map(t => {
+      totalSalesCount++;
+      const amount = t.amount.toNumber();
+      grossRevenue += amount;
+      
+      const teacherCut = amount * TEACHER_CUT_PERCENTAGE;
+      totalEarnings += teacherCut;
+
+      const studentName = t.user.profile 
+        ? `${t.user.profile.firstName} ${t.user.profile.lastName}`.trim() 
+        : undefined;
+
+      return {
+        id: t.id,
+        courseId: t.courseId,
+        courseTitle: t.course.title,
+        amount,
+        currency: t.currency,
+        teacherCut,
+        status: t.status,
+        studentName,
+        studentEmail: t.user.email,
+        createdAt: t.createdAt.toISOString()
+      };
+    });
+
+    return {
+      totalSalesCount,
+      grossRevenue,
+      totalEarnings,
+      currency: 'INR', // Assuming INR as base for MVP
+      recentTransactions
+    };
   }
 }
 

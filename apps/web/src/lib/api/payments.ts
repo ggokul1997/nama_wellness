@@ -25,6 +25,13 @@ export const paymentsApi = {
     });
   },
 
+  createB2BOrder: (data: { courseId: string, seats: number }) => {
+    return apiFetch<{ orderId: string, amount: number, currency: string }>('/payments/orders/b2b', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   verifyPayment: (data: { razorpay_order_id: string, razorpay_payment_id: string, razorpay_signature: string }) => {
     return apiFetch<{ verified: boolean }>('/payments/verify', {
       method: 'POST',

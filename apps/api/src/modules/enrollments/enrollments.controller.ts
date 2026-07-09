@@ -22,6 +22,25 @@ export const enrollmentsController = {
     }
   },
 
+  async getCompanyAvailableCourses(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const licenses = await enrollmentsService.getCompanyAvailableCourses(req.user!.sub);
+      res.json({ success: true, data: { licenses } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async enrollViaCompany(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const courseId = req.params.courseId as string;
+      const enrollment = await enrollmentsService.enrollViaCompany(req.user!.sub, courseId);
+      res.json({ success: true, data: { enrollment } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async getCourseProgress(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const enrollment = await enrollmentsService.getCourseProgress(req.user!.sub, req.params.courseId as string);

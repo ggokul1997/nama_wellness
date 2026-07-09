@@ -43,3 +43,8 @@ export const reviewCourseSchema = z.object({
   rejectionReason: z.string().optional(),
   finalPrice: z.number().min(0).optional(),
 });
+
+export const updateCorporateSettingsSchema = z.object({
+  isAvailableForCorporate: z.boolean(),
+  corporatePrice: z.number().min(0, 'Corporate price cannot be negative').optional().nullable(),
+});

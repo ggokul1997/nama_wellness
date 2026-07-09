@@ -10,6 +10,7 @@ const router: Router = Router();
 router.get('/public', coursesController.getPublicCourses);
 router.get('/public/:slug', coursesController.getPublicCourseBySlug);
 router.get('/public/id/:id', coursesController.getPublicCourseById);
+router.get('/corporate', coursesController.getCorporateCourses);
 
 // All course routes below this require authentication
 router.use(authenticate);
@@ -19,6 +20,7 @@ router.get('/admin/pending', authorize('ADMIN'), coursesController.adminGetPendi
 router.get('/admin/:id', authorize('ADMIN'), coursesController.adminGetCourse);
 router.put('/admin/:id/review', authorize('ADMIN'), coursesController.adminReviewCourse);
 router.post('/admin/:id/publish', authorize('ADMIN'), coursesController.adminPublishCourse);
+router.patch('/admin/:id/corporate', authorize('ADMIN'), coursesController.updateCorporateSettings);
 
 // Teacher routes
 router.get('/my-courses', authorize('TEACHER'), coursesController.getMyCourses);

@@ -23,6 +23,19 @@ export const registerSchema = z.object({
   path: ['confirmPassword'],
 });
 
+export const corporateRegisterSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: passwordSchema,
+  confirmPassword: z.string().min(1, 'Confirm password is required'),
+  firstName: z.string().min(1, 'First name is required').max(50),
+  lastName: z.string().min(1, 'Last name is required').max(50),
+  companyName: z.string().min(1, 'Company name is required').max(100),
+  phone: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone number').optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
@@ -61,6 +74,7 @@ export const updateProfileSchema = z.object({
 
 // Inferred request types from Zod schemas
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type CorporateRegisterInput = z.infer<typeof corporateRegisterSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;

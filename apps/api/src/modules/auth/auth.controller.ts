@@ -29,6 +29,12 @@ export const authController = {
     res.status(201).json(response);
   },
 
+  async corporateRegister(req: Request, res: Response): Promise<void> {
+    const result = await authService.corporateRegister(req.body);
+    const response: ApiResponse = { success: true, data: result, message: result.message };
+    res.status(201).json(response);
+  },
+
   async login(req: Request, res: Response): Promise<void> {
     const result = await authService.login(req.body);
     setAuthCookies(res, result.tokens.accessToken, result.tokens.refreshToken);

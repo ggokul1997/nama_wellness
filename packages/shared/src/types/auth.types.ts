@@ -45,6 +45,15 @@ export interface RegisterRequest {
   phone?: string;
 }
 
+export interface CorporateRegisterRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  phone?: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

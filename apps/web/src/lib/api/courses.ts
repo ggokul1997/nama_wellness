@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { CreateCourseInput, UpdateCourseInput, Course, CourseModule, CreateModuleInput, UpdateModuleInput, Lesson, CreateLessonInput, UpdateLessonInput, ProposePricingInput, CoursePricing, ReviewCourseInput } from '@nama/shared';
+import type { CreateCourseInput, UpdateCourseInput, Course, CourseModule, CreateModuleInput, UpdateModuleInput, Lesson, CreateLessonInput, UpdateLessonInput, ProposePricingInput, CoursePricing, ReviewCourseInput, UpdateCorporateSettingsInput } from '@nama/shared';
 
 export const coursesApi = {
   getMyCourses: () => 
@@ -7,6 +7,9 @@ export const coursesApi = {
     
   getPublicCourses: () =>
     apiFetch<{ courses: Course[] }>('/courses/public'),
+
+  getCorporateCourses: () =>
+    apiFetch<{ courses: Course[] }>('/courses/corporate'),
 
   getPublicCourseBySlug: (slug: string) =>
     apiFetch<{ course: Course }>(`/courses/public/${slug}`),
@@ -26,6 +29,12 @@ export const coursesApi = {
   updateCourse: (id: string, data: UpdateCourseInput) =>
     apiFetch<{ course: Course }>(`/courses/${id}`, {
       method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+    
+  updateCorporateSettings: (id: string, data: UpdateCorporateSettingsInput) =>
+    apiFetch<{ course: Course }>(`/courses/admin/${id}/corporate`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
     }),
 

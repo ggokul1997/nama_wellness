@@ -67,6 +67,36 @@ export class PaymentsRepository {
       orderBy: { createdAt: 'desc' }
     });
   }
+
+  async getTeacherTransactions(teacherId: string) {
+    return prisma.transaction.findMany({
+      where: {
+        status: 'SUCCESS',
+        course: {
+          teacherId: teacherId
+        }
+      },
+      include: {
+        course: {
+          select: {
+            title: true,
+          }
+        },
+        user: {
+          select: {
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+              }
+            },
+            email: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
 }
 
 export const paymentsRepository = new PaymentsRepository();

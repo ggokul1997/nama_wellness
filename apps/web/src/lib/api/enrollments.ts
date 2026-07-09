@@ -15,6 +15,16 @@ export const enrollmentsApi = {
     return apiFetch<{ enrollments: MyCourseResponse[] }>('/enrollments/my-courses');
   },
 
+  async getCompanyAvailableCourses() {
+    return apiFetch<{ licenses: any[] }>('/enrollments/company-available');
+  },
+
+  async enrollViaCompany(courseId: string) {
+    return apiFetch<{ enrollment: Enrollment }>(`/enrollments/company-enroll/${courseId}`, {
+      method: 'POST'
+    });
+  },
+
   async getCourseProgress(courseId: string) {
     return apiFetch<{ enrollment: Enrollment }>(`/enrollments/${courseId}/progress`);
   },

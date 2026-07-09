@@ -79,20 +79,71 @@ export default function LandingPage() {
             through live and recorded experiences — yoga, meditation, music, arts, and more.
           </p>
 
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ marginTop: '3rem' }}>
             {isAuthenticated ? (
-              <Link href={getDashboardRoute()} className="btn btn-primary btn-lg">
-                Go to Dashboard
-              </Link>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <Link href={getDashboardRoute()} className="btn btn-primary btn-lg" style={{ padding: '1rem 3rem' }}>
+                  Go to Dashboard
+                </Link>
+              </div>
             ) : (
-              <>
-                <Link href={ROUTES.REGISTER} className="btn btn-primary btn-lg">
-                  Start Learning Free
-                </Link>
-                <Link href={ROUTES.LOGIN} className="btn btn-secondary btn-lg">
-                  I'm a Teacher
-                </Link>
-              </>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', justifyContent: 'center', textAlign: 'left' }}>
+                
+                {/* EDPRO Section */}
+                <div style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius-xl)', padding: '2rem', border: '1px solid var(--surface-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--brand-900)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>🌟</div>
+                    <div>
+                      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>EDPRO Platform</h2>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>For individual learners and educators</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: '1rem' }}>
+                    <Link href={ROUTES.REGISTER} className="glass-card" style={{ padding: '1.25rem', textDecoration: 'none', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                      <div style={{ fontSize: '2rem' }}>🎓</div>
+                      <div>
+                        <h3 style={{ color: 'var(--text-primary)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Student</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Start learning free</p>
+                      </div>
+                    </Link>
+                    <Link href={ROUTES.LOGIN} className="glass-card" style={{ padding: '1.25rem', textDecoration: 'none', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                      <div style={{ fontSize: '2rem' }}>🧑‍🏫</div>
+                      <div>
+                        <h3 style={{ color: 'var(--brand-300)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Teacher</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Share your knowledge</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Corporate Wellness Section */}
+                <div style={{ background: 'var(--surface-raised)', borderRadius: 'var(--radius-xl)', padding: '2rem', border: '1px solid var(--surface-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>🏢</div>
+                    <div>
+                      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>Corporate Wellness</h2>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>B2B learning for organizations</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: '1rem' }}>
+                    <Link href={ROUTES.LOGIN} className="glass-card" style={{ padding: '1.25rem', textDecoration: 'none', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                      <div style={{ fontSize: '2rem' }}>🛡️</div>
+                      <div>
+                        <h3 style={{ color: 'var(--success)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Corporate Admin</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Manage your team</p>
+                      </div>
+                    </Link>
+                    <Link href={ROUTES.LOGIN} className="glass-card" style={{ padding: '1.25rem', textDecoration: 'none', transition: 'transform 0.2s, box-shadow 0.2s', display: 'flex', alignItems: 'center', gap: '1rem' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                      <div style={{ fontSize: '2rem' }}>💼</div>
+                      <div>
+                        <h3 style={{ color: 'var(--info)', fontSize: '1.125rem', marginBottom: '0.125rem' }}>Employee</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Access company courses</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+              </div>
             )}
           </div>
         </div>

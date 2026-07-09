@@ -1,9 +1,10 @@
 import type { z } from 'zod';
-import type { createCourseSchema, updateCourseSchema, createModuleSchema, updateModuleSchema, createLessonSchema, updateLessonSchema, proposePricingSchema, reviewCourseSchema } from '../validators/course.schema.js';
+import type { createCourseSchema, updateCourseSchema, createModuleSchema, updateModuleSchema, createLessonSchema, updateLessonSchema, proposePricingSchema, reviewCourseSchema, updateCorporateSettingsSchema } from '../validators/course.schema.js';
 import type { Category } from './category.types.js';
 
 export type CreateCourseInput = z.infer<typeof createCourseSchema>;
 export type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
+export type UpdateCorporateSettingsInput = z.infer<typeof updateCorporateSettingsSchema>;
 
 export interface Course {
   id: string;
@@ -16,6 +17,8 @@ export interface Course {
   status: 'DRAFT' | 'PENDING_REVIEW' | 'CHANGES_REQUESTED' | 'APPROVED' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
   coverImageUrl?: string;
   rejectedReason?: string | null;
+  isAvailableForCorporate: boolean;
+  corporatePrice?: number | null;
   createdAt: string;
   updatedAt: string;
   

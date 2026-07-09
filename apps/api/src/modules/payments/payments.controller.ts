@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { paymentsService } from './payments.service.js';
+import { companiesRepository } from '../companies/companies.repository.js';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -19,6 +20,32 @@ export const createOrder = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error creating order:', error);
     return res.status(500).json({ success: false, error: { message: error.message || 'Failed to create order' } });
+  }
+};
+
+export const createB2BOrder = async (req: Request, res: Response) => {
+  try {
+    const { courseId, seats } = req.body;
+    const adminId = req.user?.sub;
+
+    if (!adminId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!courseId || !seats || typeof seats !== 'number' || seats <= 0) {
+      return res.status(400).json({ error: 'Valid courseId and seats are required' });
+    }
+
+    const company = await companiesRepository.getCompanyByAdminId(adminId);
+    if (!company) {
+      return res.status(404).json({ error: 'Company not found for this admin' });
+    }
+
+    const order = await paymentsService.createB2BOrder(adminId, company.id, courseId, seats);
+    return res.status(200).json({ success: true, data: order });
+  } catch (error: any) {
+    console.error('Error creating B2B order:', error);
+    return res.status(500).json({ success: false, error: { message: error.message || 'Failed to create B2B order' } });
   }
 };
 
@@ -56,6 +83,22 @@ export const cancelOrder = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Cancel order error:', error);
     return res.status(500).json({ success: false, error: { message: error.message || 'Failed to cancel order' } });
+  }
+};
+
+export const getTeacherEarnings = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const earnings = await paymentsService.getTeacherEarnings(userId);
+    return res.status(200).json({ success: true, data: earnings });
+  } catch (error: any) {
+    console.error('Get teacher earnings error:', error);
+    return res.status(500).json({ success: false, error: { message: error.message || 'Failed to fetch earnings' } });
   }
 };
 

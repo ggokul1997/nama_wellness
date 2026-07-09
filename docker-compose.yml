@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  mailpit:
+    image: axllent/mailpit
+    container_name: nama_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP Server
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATA_FILE: /data/mailpit.db
+    volumes:
+      - mailpit_data:/data
+
+volumes:
+  mailpit_data:

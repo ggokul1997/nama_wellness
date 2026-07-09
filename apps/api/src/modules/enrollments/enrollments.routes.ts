@@ -9,8 +9,10 @@ const router = Router();
 // Ensure all enrollment routes require authentication
 router.use(authenticate);
 
-// Student Routes
+// Student/Employee Routes
 router.get('/my-courses', authorize(ROLES.STUDENT, ROLES.EMPLOYEE), enrollmentsController.getMyCourses);
+router.get('/company-available', authorize(ROLES.EMPLOYEE), enrollmentsController.getCompanyAvailableCourses);
+router.post('/company-enroll/:courseId', authorize(ROLES.EMPLOYEE), enrollmentsController.enrollViaCompany);
 router.get('/:courseId/progress', authorize(ROLES.STUDENT, ROLES.EMPLOYEE), enrollmentsController.getCourseProgress);
 router.post('/:courseId/lessons/:lessonId/progress', authorize(ROLES.STUDENT, ROLES.EMPLOYEE), enrollmentsController.updateLessonProgress);
 

@@ -20,6 +20,10 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
   const [finalPrice, setFinalPrice] = useState<number | ''>('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [isAvailableForCorporate, setIsAvailableForCorporate] = useState(false);
+  const [corporatePrice, setCorporatePrice] = useState<number | ''>('');
+  const [submittingCorporate, setSubmittingCorporate] = useState(false);
+
   useEffect(() => {
     fetchCourse();
   }, [id]);
@@ -31,6 +35,10 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
       setCourse(courseData || null);
       if (courseData?.pricings?.[0]) {
         setFinalPrice(courseData.pricings[0].amount);
+      }
+      if (courseData) {
+        setIsAvailableForCorporate(courseData.isAvailableForCorporate || false);
+        setCorporatePrice(courseData.corporatePrice || '');
       }
     } catch (err: unknown) {
       setError(getErrorMessage(err, 'Failed to fetch course'));
@@ -69,6 +77,23 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
       router.push('/admin/courses');
     } catch (err: unknown) {
       alert(getErrorMessage(err, 'Failed to publish course'));
+    }
+  };
+
+  const handleCorporateSettingsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingCorporate(true);
+    try {
+      await coursesApi.updateCorporateSettings(id, {
+        isAvailableForCorporate,
+        corporatePrice: corporatePrice === '' ? null : Number(corporatePrice)
+      });
+      alert('Corporate settings updated successfully!');
+      fetchCourse();
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to update corporate settings'));
+    } finally {
+      setSubmittingCorporate(false);
     }
   };
 
@@ -230,6 +255,41 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
               </button>
             </div>
           )}
+
+          <form onSubmit={handleCorporateSettingsSubmit} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Corporate B2B Settings</h2>
+            
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={isAvailableForCorporate}
+                onChange={e => setIsAvailableForCorporate(e.target.checked)}
+                style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer' }}
+              />
+              <span style={{ fontWeight: 500 }}>Enable Corporate Purchasing</span>
+            </label>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>If enabled, this course will appear in the Company Admin portal for bulk license purchasing.</p>
+
+            {isAvailableForCorporate && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <label className="label">Corporate Price per Seat (USD/INR)</label>
+                <input 
+                  type="number" 
+                  className="input" 
+                  value={corporatePrice} 
+                  onChange={e => setCorporatePrice(e.target.value === '' ? '' : Number(e.target.value))} 
+                  required={isAvailableForCorporate}
+                  min="0"
+                  step="0.01"
+                  placeholder="e.g. 99.00"
+                />
+              </div>
+            )}
+
+            <button type="submit" className="btn btn-secondary" disabled={submittingCorporate} style={{ marginTop: '0.5rem' }}>
+              {submittingCorporate ? 'Saving...' : 'Save Corporate Settings'}
+            </button>
+          </form>
         </div>
       </div>
     </div>

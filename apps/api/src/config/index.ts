@@ -18,7 +18,11 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
-  // Email (Ethereal — optional at startup, auto-created if blank)
+  // Email (Ethereal / Mailpit / Custom)
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().transform(Number).optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
   ETHEREAL_USER: z.string().optional(),
   ETHEREAL_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default('Nama Wellness <noreply@namawellness.com>'),

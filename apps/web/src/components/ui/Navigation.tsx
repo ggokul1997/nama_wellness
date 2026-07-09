@@ -25,7 +25,11 @@ export function Navigation() {
         <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.05em' }}>NAMA</div>
         </Link>
-        <span style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>EdPro</span>
+        {mounted && isAuthenticated && (
+          <span style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>
+            {activeRole === 'ADMIN' ? 'ADMIN' : activeRole === 'COMPANY_ADMIN' || activeRole === 'EMPLOYEE' ? 'Corporate Wellness' : 'EDPRO'}
+          </span>
+        )}
       </div>
       <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.875rem', alignItems: 'center' }}>
         <Link href="/courses" className="nav-link">Explore Courses</Link>

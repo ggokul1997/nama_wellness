@@ -1,12 +1,21 @@
 import type { Request, Response, NextFunction } from 'express';
 import { coursesService } from './courses.service.js';
-import { createCourseSchema, updateCourseSchema, createModuleSchema, updateModuleSchema, createLessonSchema, updateLessonSchema, proposePricingSchema, reviewCourseSchema } from '@nama/shared';
+import { createCourseSchema, updateCourseSchema, createModuleSchema, updateModuleSchema, createLessonSchema, updateLessonSchema, proposePricingSchema, reviewCourseSchema, updateCorporateSettingsSchema } from '@nama/shared';
 
 export const coursesController = {
   // Public Methods
   async getPublicCourses(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const courses = await coursesService.getPublicCourses();
+      res.json({ success: true, data: { courses } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getCorporateCourses(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const courses = await coursesService.getCorporateCourses();
       res.json({ success: true, data: { courses } });
     } catch (error) {
       next(error);
@@ -250,6 +259,16 @@ export const coursesController = {
   async adminPublishCourse(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const course = await coursesService.adminPublishCourse(req.params.id as string);
+      res.json({ success: true, data: { course } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateCorporateSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = updateCorporateSettingsSchema.parse(req.body);
+      const course = await coursesService.updateCorporateSettings(req.params.id as string, req.user!.sub, data);
       res.json({ success: true, data: { course } });
     } catch (error) {
       next(error);

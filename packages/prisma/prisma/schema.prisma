@@ -46,6 +46,10 @@ model User {
   enrollments                Enrollment[]
   transactions               Transaction[]
 
+  // Relations for Sprint E
+  companyAdmin               Company?             @relation("CompanyAdmin")
+  companyEmployee            CompanyEmployee?
+
   @@map("users")
 }
 
@@ -230,6 +234,8 @@ model Course {
   coverImageUrl   String?
   publishedAt     DateTime?
   rejectedReason  String?
+  isAvailableForCorporate Boolean @default(false)
+  corporatePrice  Decimal?     @db.Decimal(12,2)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -242,6 +248,7 @@ model Course {
   studyMaterials  StudyMaterial[]
   enrollments     Enrollment[]
   transactions    Transaction[]
+  companyLicenses CompanyLicense[]
 
   @@map("courses")
 }
@@ -491,4 +498,51 @@ model Transaction {
   course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
+}
+
+// =============================================================
+// Corporate & B2B (Sprint E)
+// =============================================================
+
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  adminId         String   @unique
+  domain          String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  admin           User     @relation("CompanyAdmin", fields: [adminId], references: [id])
+  employees       CompanyEmployee[]
+  licenses        CompanyLicense[]
+
+  @@map("companies")
+}
+
+model CompanyEmployee {
+  id         String   @id @default(cuid())
+  companyId  String
+  userId     String   @unique
+  joinedAt   DateTime @default(now())
+
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+  @@map("company_employees")
+}
+
+model CompanyLicense {
+  id             String   @id @default(cuid())
+  companyId      String
+  courseId       String
+  totalSeats     Int
+  usedSeats      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  course         Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("company_licenses")
 }

@@ -6,6 +6,8 @@ export type * from './types/teacher-application.types.js';
 export type * from './types/course.types.js';
 export type * from './types/study-material.types.js';
 export type * from './types/enrollment.types.js';
+export type * from './types/earnings.types.js';
+export type * from './types/company.types.js';
 
 // Constants
 export * from './constants/roles.js';

@@ -34,6 +34,14 @@ export const coursesRepository = {
     });
   },
 
+  async findAllCorporateCourses() {
+    return prisma.course.findMany({
+      where: { status: 'PUBLISHED', isAvailableForCorporate: true },
+      include: { category: true, teacher: { include: { profile: true } }, pricings: { where: { isCurrent: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
   async findPublishedBySlug(slug: string) {
     return prisma.course.findUnique({
       where: { slug, status: 'PUBLISHED' },

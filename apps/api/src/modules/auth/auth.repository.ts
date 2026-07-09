@@ -30,7 +30,11 @@ export const authRepository = {
     role: Role;
     firstName: string;
     lastName: string;
+    companyName?: string;
   }): Promise<UserWithRelations> {
+    const isCorporate = data.role === 'COMPANY_ADMIN';
+    const productVariant = isCorporate ? 'CORPORATE' : 'EDPRO';
+
     return prisma.user.create({
       data: {
         email: data.email,
@@ -39,7 +43,7 @@ export const authRepository = {
         roles: {
           create: {
             role: data.role,
-            productVariant: 'EDPRO',
+            productVariant,
           },
         },
         profile: {
@@ -48,6 +52,15 @@ export const authRepository = {
             lastName: data.lastName,
           },
         },
+        ...(isCorporate && data.companyName
+          ? {
+              companyAdmin: {
+                create: {
+                  name: data.companyName,
+                },
+              },
+            }
+          : {}),
       },
       include: { roles: true, profile: true },
     });

@@ -5,7 +5,7 @@ import { pricingRepository } from './pricing.repository.js';
 import { Errors } from '../../utils/errors.js';
 import { s3Utils } from '../../utils/s3.js';
 import { v4 as uuidv4 } from 'uuid';
-import type { CreateCourseInput, UpdateCourseInput, CreateModuleInput, UpdateModuleInput, CreateLessonInput, UpdateLessonInput, ProposePricingInput, ReviewCourseInput } from '@nama/shared';
+import type { CreateCourseInput, UpdateCourseInput, CreateModuleInput, UpdateModuleInput, CreateLessonInput, UpdateLessonInput, ProposePricingInput, ReviewCourseInput, UpdateCorporateSettingsInput } from '@nama/shared';
 
 export const coursesService = {
   async getMyCourses(userId: string) {
@@ -21,6 +21,16 @@ export const coursesService = {
 
   async getPublicCourses() {
     const courses = await coursesRepository.findAllPublished();
+    for (const course of courses) {
+      if (course.coverImageUrl) {
+        course.coverImageUrl = await s3Utils.signDocumentUrl(course.coverImageUrl);
+      }
+    }
+    return courses;
+  },
+
+  async getCorporateCourses() {
+    const courses = await coursesRepository.findAllCorporateCourses();
     for (const course of courses) {
       if (course.coverImageUrl) {
         course.coverImageUrl = await s3Utils.signDocumentUrl(course.coverImageUrl);
@@ -99,6 +109,15 @@ export const coursesService = {
     }
 
     return coursesRepository.update(id, { ...data, slug });
+  },
+
+  async updateCorporateSettings(id: string, _adminId: string, data: UpdateCorporateSettingsInput) {
+    // Only accessible via ADMIN route, but double check role if needed.
+    // Assuming the controller ensures user is ADMIN.
+    const course = await coursesRepository.findById(id);
+    if (!course) throw Errors.notFound('Course not found');
+
+    return coursesRepository.update(id, data);
   },
 
   async getPresignedCoverUrl(courseId: string, teacherId: string, mimeType: string, fileSizeBytes: number) {

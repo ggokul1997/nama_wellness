@@ -72,6 +72,110 @@
   --transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* =============================================================
+   THEME VARIANTS
+   ============================================================= */
+
+/* TEACHER (EDPRO) - Amber/Orange */
+[data-theme="teacher"] {
+  --brand-50:  #fffbeb;
+  --brand-100: #fef3c7;
+  --brand-200: #fde68a;
+  --brand-300: #fcd34d;
+  --brand-400: #fbbf24;
+  --brand-500: #f59e0b;
+  --brand-600: #d97706;
+  --brand-700: #b45309;
+  --brand-800: #92400e;
+  --brand-900: #78350f;
+  --brand-950: #451a03;
+
+  --surface-border:   rgba(245, 158, 11, 0.15);
+  --surface-border-strong: rgba(245, 158, 11, 0.35);
+  
+  --shadow-glow: 0 0 32px rgba(245, 158, 11, 0.25);
+  --glass-border: rgba(245, 158, 11, 0.2);
+  
+  --gradient-brand: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #e11d48 100%);
+  --gradient-card:  linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(234, 88, 12, 0.04));
+  --gradient-hero:  radial-gradient(ellipse 80% 60% at 50% -10%, rgba(245, 158, 11, 0.3) 0%, transparent 70%);
+}
+
+/* CORPORATE ADMIN (Corporate Wellness) - Emerald Green */
+[data-theme="company_admin"] {
+  --brand-50:  #ecfdf5;
+  --brand-100: #d1fae5;
+  --brand-200: #a7f3d0;
+  --brand-300: #6ee7b7;
+  --brand-400: #34d399;
+  --brand-500: #10b981;
+  --brand-600: #059669;
+  --brand-700: #047857;
+  --brand-800: #065f46;
+  --brand-900: #064e3b;
+  --brand-950: #022c22;
+
+  --surface-border:   rgba(16, 185, 129, 0.15);
+  --surface-border-strong: rgba(16, 185, 129, 0.35);
+  
+  --shadow-glow: 0 0 32px rgba(16, 185, 129, 0.25);
+  --glass-border: rgba(16, 185, 129, 0.2);
+  
+  --gradient-brand: linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%);
+  --gradient-card:  linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.04));
+  --gradient-hero:  radial-gradient(ellipse 80% 60% at 50% -10%, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+}
+
+/* EMPLOYEE (Corporate Wellness) - Ocean Blue */
+[data-theme="employee"] {
+  --brand-50:  #f0f9ff;
+  --brand-100: #e0f2fe;
+  --brand-200: #bae6fd;
+  --brand-300: #7dd3fc;
+  --brand-400: #38bdf8;
+  --brand-500: #0ea5e9;
+  --brand-600: #0284c7;
+  --brand-700: #0369a1;
+  --brand-800: #075985;
+  --brand-900: #0c4a6e;
+  --brand-950: #082f49;
+
+  --surface-border:   rgba(14, 165, 233, 0.15);
+  --surface-border-strong: rgba(14, 165, 233, 0.35);
+  
+  --shadow-glow: 0 0 32px rgba(14, 165, 233, 0.25);
+  --glass-border: rgba(14, 165, 233, 0.2);
+  
+  --gradient-brand: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0d9488 100%);
+  --gradient-card:  linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(2, 132, 199, 0.04));
+  --gradient-hero:  radial-gradient(ellipse 80% 60% at 50% -10%, rgba(14, 165, 233, 0.3) 0%, transparent 70%);
+}
+
+/* PLATFORM ADMIN (NAMA Core) - Slate/Crimson */
+[data-theme="admin"] {
+  --brand-50:  #f8fafc;
+  --brand-100: #f1f5f9;
+  --brand-200: #e2e8f0;
+  --brand-300: #cbd5e1;
+  --brand-400: #94a3b8;
+  --brand-500: #64748b;
+  --brand-600: #475569;
+  --brand-700: #334155;
+  --brand-800: #1e293b;
+  --brand-900: #0f172a;
+  --brand-950: #020617;
+
+  --surface-border:   rgba(100, 116, 139, 0.25);
+  --surface-border-strong: rgba(100, 116, 139, 0.45);
+  
+  --shadow-glow: 0 0 32px rgba(190, 18, 60, 0.25); /* Crimson glow for admin */
+  --glass-border: rgba(100, 116, 139, 0.3);
+  
+  --gradient-brand: linear-gradient(135deg, #64748b 0%, #334155 50%, #be123c 100%);
+  --gradient-card:  linear-gradient(135deg, rgba(100, 116, 139, 0.08), rgba(190, 18, 60, 0.04));
+  --gradient-hero:  radial-gradient(ellipse 80% 60% at 50% -10%, rgba(190, 18, 60, 0.3) 0%, transparent 70%);
+}
+
 /* ============================================================= */
 
 *, *::before, *::after {

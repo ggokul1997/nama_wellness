@@ -1,5 +1,6 @@
 import type {
   RegisterInput,
+  CorporateRegisterInput,
   LoginInput,
   VerifyEmailInput,
   ForgotPasswordInput,
@@ -112,6 +113,46 @@ export const authService = {
     }
 
     return { message: 'Registration successful. Check your email (or server logs) for the verification code.' };
+  },
+
+  async corporateRegister(input: CorporateRegisterInput): Promise<{ message: string }> {
+    const existing = await authRepository.findUserByEmail(input.email);
+    if (existing) {
+      throw Errors.conflict('An account with this email already exists');
+    }
+
+    const passwordHash = await hashPassword(input.password);
+    const user = await authRepository.createUser({
+      email: input.email,
+      passwordHash,
+      phone: input.phone,
+      role: 'COMPANY_ADMIN',
+      firstName: input.firstName,
+      lastName: input.lastName,
+      companyName: input.companyName,
+    });
+
+    await authRepository.addPasswordHistory(user.id, passwordHash);
+
+    // Send email verification OTP
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
+    await authRepository.upsertOTP({
+      identifier: user.email,
+      purpose: 'EMAIL_VERIFICATION',
+      otp,
+      expiresAt,
+    });
+
+    logger.info({ email: user.email, otp }, `🔑 [DEV] Verification OTP code for ${user.email} is: ${otp}`);
+
+    try {
+      await emailService.sendVerificationOTP(user.email, otp, input.firstName);
+    } catch (err) {
+      logger.error({ err, email: user.email }, '📧 Failed to send verification email (port block or unconfigured Ethereal SMTP)');
+    }
+
+    return { message: 'Corporate registration successful. Check your email for the verification code.' };
   },
 
   async login(input: LoginInput): Promise<LoginResponse> {
@@ -233,13 +274,11 @@ export const authService = {
 
   async forgotPassword(input: ForgotPasswordInput): Promise<{ message: string }> {
     const user = await authRepository.findUserByEmail(input.email);
-    // Always return the same message to prevent email enumeration
-    const message = 'If this email is registered, a password reset code has been sent.';
-
     if (!user) {
-      logger.warn({ email: input.email }, `🔑 [DEV] Password reset requested for unregistered email: ${input.email}`);
-      return { message };
+      throw Errors.notFound('No account found with this email address');
     }
+    
+    const message = 'A password reset code has been sent to your email.';
 
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
@@ -294,6 +333,11 @@ export const authService = {
       purpose: 'PASSWORD_RESET',
       otp: input.code,
     });
+    
+    // Inherently proves email ownership, so verify it if not already verified
+    if (!user.emailVerified) {
+      await authRepository.setEmailVerified(user.id);
+    }
 
     return { message: 'Password reset successfully. You can now log in.' };
   },

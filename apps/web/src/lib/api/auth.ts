@@ -1,6 +1,7 @@
 import { apiFetch } from './client';
 import type {
   RegisterRequest,
+  CorporateRegisterRequest,
   LoginRequest,
   LoginResponse,
   AuthTokens,
@@ -13,6 +14,14 @@ import type {
 export const authApi = {
   register: (data: RegisterRequest) =>
     apiFetch<{ message: string }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      auth: false,
+      absoluteUrl: true,
+    }),
+
+  corporateRegister: (data: CorporateRegisterRequest) =>
+    apiFetch<{ message: string }>('/auth/register/corporate', {
       method: 'POST',
       body: JSON.stringify(data),
       auth: false,
