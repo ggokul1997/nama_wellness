@@ -49,6 +49,11 @@ model User {
   certificates               Certificate[]
   notifications              Notification[]
 
+  // Relations for Sprint G
+  chatSessionsAsStudent      ChatSession[]      @relation("ChatStudent")
+  chatSessionsAsTeacher      ChatSession[]      @relation("ChatTeacher")
+  chatMessages               ChatMessage[]
+
   // Relations for Sprint E
   companyAdmin               Company?             @relation("CompanyAdmin")
   companyEmployee            CompanyEmployee?
@@ -255,6 +260,7 @@ model Course {
   reviews         Review[]
   liveSessions    LiveSession[]
   certificates    Certificate[]
+  chatSessions    ChatSession[]
 
   @@map("courses")
 }
@@ -625,4 +631,39 @@ model Notification {
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+// =============================================================
+// Sprint G: Chat & Community
+// =============================================================
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  studentId String
+  teacherId String
+  courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   User     @relation("ChatStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher   User     @relation("ChatTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+
+  @@unique([studentId, courseId])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  senderId  String
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender    User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
 }

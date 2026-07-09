@@ -482,28 +482,31 @@ textarea.input {
 
 .layout-with-sidebar {
   display: flex;
-  min-height: 100vh;
+  min-height: calc(100vh - 57px);
+  padding-left: 256px;
 }
 
 .sidebar {
   width: 256px;
-  min-height: 100vh;
+  position: fixed;
+  top: 57px;
+  bottom: 0;
+  left: 0;
   flex-shrink: 0;
   background: var(--surface-base);
   border-right: 1px solid var(--surface-border);
   display: flex;
   flex-direction: column;
   padding: 1.5rem 0;
-  position: sticky;
-  top: 0;
-  height: 100vh;
   overflow-y: auto;
+  z-index: 40;
 }
 
 .main-content {
   flex: 1;
   overflow-x: hidden;
   background: var(--surface-bg);
+  min-height: calc(100vh - 57px);
 }
 
 /* ============================================================= */
@@ -690,4 +693,20 @@ textarea.input {
 
 .btn-secondary:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.15);
+}
+
+/* Custom Scrollbar for Chat */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
 }

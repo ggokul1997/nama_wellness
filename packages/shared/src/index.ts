@@ -9,6 +9,7 @@ export type * from './types/engagement.types.js';
 export type * from './types/enrollment.types.js';
 export type * from './types/earnings.types.js';
 export type * from './types/company.types.js';
+export type * from './types/chat.types.js';
 
 // Constants
 export * from './constants/roles.js';

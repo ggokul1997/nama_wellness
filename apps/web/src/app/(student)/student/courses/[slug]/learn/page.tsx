@@ -2,8 +2,8 @@
 
 import { useState, useEffect, use } from 'react';
 import { enrollmentsApi } from '@/lib/api/enrollments';
-import type { Enrollment, Lesson } from '@nama/shared';
 import { getErrorMessage } from '@/lib/error';
+import type { Enrollment, Lesson } from '@nama/shared';
 import { engagementApi } from '@/lib/api/engagement';
 import { LessonSidebar } from './_components/LessonSidebar';
 import { LessonContentArea } from './_components/LessonContentArea';
@@ -104,6 +104,8 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
       setSubmittingReview(false);
     }
   };
+
+
 
   if (loading) return <div style={{ padding: '2rem' }}>Loading learning environment...</div>;
   if (error || !enrollment || !enrollment.course) return <div className="alert alert-error">{error || 'Course not found'}</div>;

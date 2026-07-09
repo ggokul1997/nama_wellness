@@ -19,13 +19,13 @@ export function LessonSidebar({
   getLessonStatus,
   onClaimCertificate,
   onLeaveReview,
-  claimingCert
+  claimingCert,
 }: LessonSidebarProps) {
   return (
     <aside style={{ width: '300px', borderRight: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', background: 'var(--surface-color)' }}>
       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{course.title}</h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Status: {enrollment.status}</p>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Status: {enrollment.status}</p>
       </div>
       
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
@@ -42,7 +42,9 @@ export function LessonSidebar({
                 return (
                   <button 
                     key={lesson.id}
-                    onClick={() => onSelectLesson(lesson)}
+                    onClick={() => {
+                      onSelectLesson(lesson);
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',

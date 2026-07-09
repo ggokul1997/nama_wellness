@@ -13,6 +13,7 @@ import { reviewsRouter } from '../modules/reviews/reviews.routes.js';
 import { liveSessionsRouter } from '../modules/live-sessions/live-sessions.routes.js';
 import { certificatesRouter } from '../modules/certificates/certificates.routes.js';
 import { notificationsRouter } from '../modules/notifications/notifications.routes.js';
+import { chatRouter } from '../modules/chat/chat.routes.js';
 export const v1Router: Router = Router();
 
 // Health check — no auth required
@@ -42,5 +43,6 @@ v1Router.use('/reviews', reviewsRouter);
 v1Router.use('/live-sessions', liveSessionsRouter);
 v1Router.use('/certificates', certificatesRouter);
 v1Router.use('/notifications', notificationsRouter);
+v1Router.use('/chat', chatRouter);
 // Sprint B onwards — routes added here:
 // v1Router.use('/teacher', teacherRouter);
