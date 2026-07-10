@@ -2,7 +2,7 @@
 echo "Initializing LocalStack S3..."
 
 # Create bucket if it doesn't exist
-awslocal s3api head-bucket --bucket nama-wellness-uploads 2>/dev/null || awslocal s3api create-bucket --bucket nama-wellness-uploads
+awslocal s3api head-bucket --bucket nama-media 2>/dev/null || awslocal s3api create-bucket --bucket nama-media
 
 # Apply CORS policy
 cat <<EOF > /tmp/cors.json
@@ -17,6 +17,6 @@ cat <<EOF > /tmp/cors.json
   ]
 }
 EOF
-awslocal s3api put-bucket-cors --bucket nama-wellness-uploads --cors-configuration file:///tmp/cors.json
+awslocal s3api put-bucket-cors --bucket nama-media --cors-configuration file:///tmp/cors.json
 
 echo "LocalStack S3 initialization complete."

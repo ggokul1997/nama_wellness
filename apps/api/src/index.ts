@@ -6,6 +6,7 @@ import { connectDatabase, disconnectDatabase } from './infrastructure/database/p
 import { connectRedis, disconnectRedis } from './infrastructure/redis/redis.client.js';
 import { socketService } from './infrastructure/socket/socket.service.js';
 import type { Server } from 'http';
+import { createServer } from 'http';
 
 let server: Server;
 
@@ -15,8 +16,12 @@ async function start(): Promise<void> {
   await connectRedis();
 
   const app = createApp();
+  server = createServer(app);
 
-  server = app.listen(config.PORT, () => {
+  // Initialize WebSockets before listening
+  socketService.initialize(server);
+
+  server.listen(config.PORT, () => {
     logger.info(
       {
         port: config.PORT,
@@ -26,9 +31,6 @@ async function start(): Promise<void> {
       '🚀 Nama Wellness API started',
     );
   });
-
-  // Initialize WebSockets
-  socketService.initialize(server);
 }
 
 async function shutdown(signal: string): Promise<void> {
@@ -44,8 +46,10 @@ async function shutdown(signal: string): Promise<void> {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('unhandledRejection', (reason) => {
-  logger.error({ reason }, 'Unhandled promise rejection');
-  process.exit(1);
+  // Log the rejection but do NOT kill the process.
+  // A single failed request (e.g. S3 timeout, bad DB query) should never
+  // bring down the entire API for all other users/requests.
+  logger.error({ reason }, 'Unhandled promise rejection — server continues running');
 });
 
 start().catch((err) => {

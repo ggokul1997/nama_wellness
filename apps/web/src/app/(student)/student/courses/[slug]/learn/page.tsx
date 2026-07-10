@@ -25,12 +25,12 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
   const [claimingCert, setClaimingCert] = useState(false);
 
   useEffect(() => {
-    fetchCourseProgress();
+    fetchCourseProgress(true);
   }, [slug]);
 
-  const fetchCourseProgress = async () => {
+  const fetchCourseProgress = async (initialLoad = false) => {
     try {
-      setLoading(true);
+      if (initialLoad) setLoading(true);
       const res = await enrollmentsApi.getCourseProgress(slug);
       setEnrollment(res.data?.enrollment || null);
       
@@ -44,12 +44,12 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
     } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (initialLoad) setLoading(false);
     }
   };
 
   const handleLessonComplete = async () => {
-    if (!enrollment || !activeLesson || !enrollment.course) return;
+    if (!enrollment || !activeLesson || !enrollment.course || updating) return;
 
     try {
       setUpdating(true);
@@ -65,11 +65,33 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
       setUpdating(false);
     }
   };
+  const handleToggleLessonStatus = async (lessonId: string, currentStatus: string) => {
+    if (!enrollment?.course || updating) return;
 
+    try {
+      setUpdating(true);
+      const newStatus = currentStatus === 'COMPLETED' ? 'IN_PROGRESS' : 'COMPLETED';
+      await enrollmentsApi.updateLessonProgress(enrollment.course.id, lessonId, {
+        status: newStatus,
+        progressPercent: newStatus === 'COMPLETED' ? 100 : 0,
+      });
+      // Refresh to update progress checkmarks
+      await fetchCourseProgress();
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Failed to update progress'));
+    } finally {
+      setUpdating(false);
+    }
+  };
   const getLessonStatus = (lessonId: string) => {
     if (!enrollment?.progress) return 'NOT_STARTED';
     const progress = enrollment.progress.find(p => p.lessonId === lessonId);
     return progress?.status || 'NOT_STARTED';
+  };
+
+  const getLessonProgressData = (lessonId: string) => {
+    if (!enrollment?.progress) return null;
+    return enrollment.progress.find(p => p.lessonId === lessonId) || null;
   };
 
   const handleClaimCertificate = async () => {
@@ -113,26 +135,27 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
   const { course } = enrollment;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg-primary)' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 57px)', overflow: 'hidden', background: 'var(--bg-primary)' }}>
       <LessonSidebar 
         course={course}
         enrollment={enrollment}
         activeLesson={activeLesson}
         onSelectLesson={setActiveLesson}
         getLessonStatus={getLessonStatus}
+        onToggleLessonStatus={handleToggleLessonStatus}
         onClaimCertificate={handleClaimCertificate}
         onLeaveReview={() => setShowReviewModal(true)}
         claimingCert={claimingCert}
       />
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         {activeLesson ? (
           <LessonContentArea 
+            courseId={enrollment.course.id}
             activeLesson={activeLesson}
-            updating={updating}
             onCompleteLesson={handleLessonComplete}
-            getLessonStatus={getLessonStatus}
+            initialTime={getLessonProgressData(activeLesson.id)?.lastWatchedTimestamp || 0}
           />
         ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>

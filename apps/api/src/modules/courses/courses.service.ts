@@ -6,6 +6,7 @@ import { Errors } from '../../utils/errors.js';
 import { s3Utils } from '../../utils/s3.js';
 import { v4 as uuidv4 } from 'uuid';
 import type { CreateCourseInput, UpdateCourseInput, CreateModuleInput, UpdateModuleInput, CreateLessonInput, UpdateLessonInput, ProposePricingInput, ReviewCourseInput, UpdateCorporateSettingsInput } from '@nama/shared';
+import { prisma } from '../../infrastructure/database/prisma.client.js';
 
 export const coursesService = {
   async getMyCourses(userId: string) {
@@ -250,7 +251,33 @@ export const coursesService = {
     // Don't update the lesson's contentUrl yet; wait for the client to confirm upload success
     // The client will call updateLesson with the new contentUrl.
 
-    return { uploadUrl, fileUrl };
+    return { uploadUrl, fileUrl, key };
+  },
+
+  async streamLessonVideo(lessonId: string, userId: string, req: any, res: any) {
+    const lesson = await lessonsRepository.findById(lessonId);
+    if (!lesson) throw Errors.notFound('Lesson not found');
+    if (!lesson.contentUrl) throw Errors.notFound('Video content not uploaded yet');
+
+    const module = await modulesRepository.findById(lesson.moduleId);
+    if (!module) throw Errors.notFound('Module not found');
+
+    const course = await coursesRepository.findById(module.courseId);
+    if (!course) throw Errors.notFound('Course not found');
+
+    // Authorization: Must be the teacher OR an enrolled active/completed student
+    if (course.teacherId !== userId) {
+      const enrollment = await prisma.enrollment.findUnique({
+        where: { userId_courseId: { userId, courseId: course.id } }
+      });
+      if (!enrollment || (enrollment.status !== 'ACTIVE' && enrollment.status !== 'COMPLETED')) {
+        throw Errors.forbidden('You do not have active access to this course material');
+      }
+    }
+
+    // Proxy the stream with Range support
+    const rangeHeader = req.headers.range;
+    await s3Utils.streamObject(lesson.contentUrl, rangeHeader, res);
   },
 
   // Pricing & Review Workflow

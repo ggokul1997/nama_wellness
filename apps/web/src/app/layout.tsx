@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth/session';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { SocketProvider } from '@/components/providers/SocketProvider';
 import { Navigation } from '@/components/ui/Navigation';
 
 export const metadata: Metadata = {
@@ -23,15 +24,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <AuthProvider>
-          <ThemeProvider>
-            <div className="layout-wrapper">
-              <Navigation />
-              
-              <main className="main-content">
-                {children}
-              </main>
-            </div>
-          </ThemeProvider>
+          <SocketProvider>
+            <ThemeProvider>
+              <div className="layout-wrapper">
+                <Navigation />
+                
+                <main className="main-content">
+                  {children}
+                </main>
+              </div>
+            </ThemeProvider>
+          </SocketProvider>
         </AuthProvider>
       </body>
     </html>

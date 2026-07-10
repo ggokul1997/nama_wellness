@@ -6,6 +6,7 @@ interface LessonSidebarProps {
   activeLesson: Lesson | null;
   onSelectLesson: (lesson: Lesson) => void;
   getLessonStatus: (lessonId: string) => string;
+  onToggleLessonStatus?: (lessonId: string, currentStatus: string) => void;
   onClaimCertificate?: () => void;
   onLeaveReview?: () => void;
   claimingCert?: boolean;
@@ -17,6 +18,7 @@ export function LessonSidebar({
   activeLesson, 
   onSelectLesson, 
   getLessonStatus,
+  onToggleLessonStatus,
   onClaimCertificate,
   onLeaveReview,
   claimingCert,
@@ -40,7 +42,7 @@ export function LessonSidebar({
                 const isActive = activeLesson?.id === lesson.id;
                 
                 return (
-                  <button 
+                  <div 
                     key={lesson.id}
                     onClick={() => {
                       onSelectLesson(lesson);
@@ -59,20 +61,30 @@ export function LessonSidebar({
                       transition: 'all 0.2s'
                     }}
                     className={!isActive ? 'hover:bg-white/5' : ''}
+                    role="button"
+                    tabIndex={0}
                   >
-                    <span style={{ 
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: '20px', height: '20px', borderRadius: '50%', 
-                      background: status === 'COMPLETED' ? (isActive ? '#fff' : 'var(--brand-500)') : 'rgba(255,255,255,0.1)',
-                      color: status === 'COMPLETED' ? (isActive ? 'var(--brand-600)' : '#fff') : 'transparent',
-                      fontSize: '0.75rem'
-                    }}>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onToggleLessonStatus) onToggleLessonStatus(lesson.id, status);
+                      }}
+                      style={{ 
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '20px', height: '20px', borderRadius: '50%', 
+                        background: status === 'COMPLETED' ? (isActive ? '#fff' : 'var(--brand-500)') : 'rgba(255,255,255,0.1)',
+                        color: status === 'COMPLETED' ? (isActive ? 'var(--brand-600)' : '#fff') : 'transparent',
+                        fontSize: '0.75rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0
+                      }}>
                       {status === 'COMPLETED' && '✓'}
-                    </span>
+                    </button>
                     <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
                       {lesson.title}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>

@@ -479,6 +479,7 @@ model LessonProgress {
   lessonId        String
   status          ProgressStatus @default(NOT_STARTED)
   progressPercent Int            @default(0)
+  lastWatchedTimestamp Int       @default(0)
   lastAccessedAt  DateTime       @default(now())
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt

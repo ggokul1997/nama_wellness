@@ -30,9 +30,14 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
       if (course && user) {
         try {
           console.log(`[DEBUG] calling getCourseProgress for course ${course.id}`);
-          await enrollmentsApi.getCourseProgress(course.id);
-          console.log(`[DEBUG] getCourseProgress success`);
-          setIsEnrolled(true);
+          const res = await enrollmentsApi.getCourseProgress(course.id);
+          if (res.data?.enrollment) {
+            console.log(`[DEBUG] getCourseProgress success`);
+            setIsEnrolled(true);
+          } else {
+            console.log(`[DEBUG] getCourseProgress returned null`);
+            setIsEnrolled(false);
+          }
         } catch (e) {
           console.log(`[DEBUG] getCourseProgress failed`, e);
           setIsEnrolled(false);

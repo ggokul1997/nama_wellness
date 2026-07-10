@@ -189,6 +189,14 @@ export const coursesController = {
     }
   },
 
+  async streamLessonVideo(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await coursesService.streamLessonVideo(req.params.lessonId as string, req.user!.sub, req, res);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   // Pricing & Review Workflow
   async proposePricing(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

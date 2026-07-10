@@ -4,18 +4,32 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { engagementApi } from '@/lib/api/engagement';
 import type { Notification } from '@nama/shared';
+import { useSocket } from '@/components/providers/SocketProvider';
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { socket } = useSocket();
 
   useEffect(() => {
+    // Initial fetch on mount
     fetchNotifications();
-    // In a real app we'd use WebSocket, but for testing we poll frequently (5s)
-    const interval = setInterval(fetchNotifications, 5000);
-    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (notification: Notification) => {
+      setNotifications(prev => [notification, ...prev]);
+    };
+
+    socket.on('new_notification', handleNewNotification);
+
+    return () => {
+      socket.off('new_notification', handleNewNotification);
+    };
+  }, [socket]);
 
   const fetchNotifications = async () => {
     try {

@@ -31,12 +31,14 @@ export default function CheckoutPage() {
           // Verify they aren't already enrolled
           if (user) {
             try {
-              await enrollmentsApi.getCourseProgress(fetchedCourse.id);
-              // If successful, they are enrolled! Redirect them.
-              router.replace(`/student/courses/${fetchedCourse.slug}/learn`);
-              return; // Stop loading state from clearing, let it redirect
+              const res = await enrollmentsApi.getCourseProgress(fetchedCourse.id);
+              if (res.data?.enrollment) {
+                // If successful, they are enrolled! Redirect them.
+                router.replace(`/student/courses/${fetchedCourse.slug}/learn`);
+                return; // Stop loading state from clearing, let it redirect
+              }
             } catch (e) {
-              // Not enrolled, which is correct for checkout
+              // API failed
             }
           }
         } else {

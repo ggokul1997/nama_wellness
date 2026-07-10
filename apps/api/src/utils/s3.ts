@@ -2,9 +2,13 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // This configuration targets the LocalStack instance running in docker-compose.
+// Use the same env var names as defined in apps/api/.env
+const S3_ENDPOINT = process.env.S3_ENDPOINT || process.env.AWS_ENDPOINT_URL || 'http://localhost:4566';
+const BUCKET_NAME = process.env.S3_BUCKET_MEDIA || process.env.AWS_S3_BUCKET_NAME || 'nama-media';
+
 const s3Client = new S3Client({
-  region: 'us-east-1',
-  endpoint: process.env.AWS_ENDPOINT_URL || 'http://localhost:4566',
+  region: process.env.AWS_REGION || 'us-east-1',
+  endpoint: S3_ENDPOINT,
   forcePathStyle: true,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
@@ -13,8 +17,6 @@ const s3Client = new S3Client({
   requestChecksumCalculation: 'WHEN_REQUIRED',
   responseChecksumValidation: 'WHEN_REQUIRED',
 });
-
-const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || 'nama-wellness-uploads';
 
 export const s3Utils = {
   /**
@@ -37,7 +39,7 @@ export const s3Utils = {
     });
 
     // The public URL to access the file after upload (assuming public-read or accessible via CF)
-    const fileUrl = `${process.env.AWS_ENDPOINT_URL || 'http://localhost:4566'}/${BUCKET_NAME}/${key}`;
+    const fileUrl = `${S3_ENDPOINT}/${BUCKET_NAME}/${key}`;
 
     return { uploadUrl, fileUrl, key };
   },
@@ -57,9 +59,55 @@ export const s3Utils = {
    * Helper to convert an absolute S3 fileUrl back to a signed URL for viewing.
    */
   async signDocumentUrl(fileUrl: string, expiresInSeconds = 3600): Promise<string> {
-    const bucketPrefix = `${process.env.AWS_ENDPOINT_URL || 'http://localhost:4566'}/${BUCKET_NAME}/`;
+    const bucketPrefix = `${S3_ENDPOINT}/${BUCKET_NAME}/`;
     if (!fileUrl.startsWith(bucketPrefix)) return fileUrl;
     const key = fileUrl.replace(bucketPrefix, '');
     return this.generatePresignedGetUrl(key, expiresInSeconds);
+  },
+
+  /**
+   * Streams a file from S3 directly to the Express response, supporting HTTP Range requests.
+   */
+  async streamObject(fileUrl: string, rangeHeader: string | undefined, res: any): Promise<void> {
+    const bucketPrefix = `${S3_ENDPOINT}/${BUCKET_NAME}/`;
+    if (!fileUrl.startsWith(bucketPrefix)) {
+      res.status(404).send('File not found or not in S3');
+      return;
+    }
+    const key = fileUrl.replace(bucketPrefix, '');
+
+    try {
+      const command = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        Range: rangeHeader,
+      });
+
+      const response = await s3Client.send(command);
+
+      // Set headers from S3 response
+      if (response.ContentType) res.setHeader('Content-Type', response.ContentType);
+      if (response.ContentLength) res.setHeader('Content-Length', response.ContentLength.toString());
+      if (response.ContentRange) res.setHeader('Content-Range', response.ContentRange);
+      if (response.AcceptRanges) res.setHeader('Accept-Ranges', response.AcceptRanges);
+      
+      // S3 returns 206 if Range was provided and valid, 200 otherwise
+      res.status(response.$metadata.httpStatusCode || 200);
+
+      // Pipe the stream to the response
+      if (response.Body) {
+        // In Node.js environment, response.Body is an IncomingMessage or Readable
+        (response.Body as any).pipe(res);
+      } else {
+        res.status(404).send('Empty body');
+      }
+    } catch (error: any) {
+      if (error.name === 'NoSuchKey') {
+        res.status(404).send('Video not found');
+      } else {
+        console.error('S3 stream error:', error);
+        res.status(500).send('Error streaming video');
+      }
+    }
   }
 };

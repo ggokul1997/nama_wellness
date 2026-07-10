@@ -21,6 +21,7 @@ export interface LessonProgress {
   lessonId: string;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
   progressPercent: number;
+  lastWatchedTimestamp: number;
   lastAccessedAt: string | Date;
   createdAt: string | Date;
   updatedAt: string | Date;

@@ -22,6 +22,11 @@ router.put('/admin/:id/review', authorize('ADMIN'), coursesController.adminRevie
 router.post('/admin/:id/publish', authorize('ADMIN'), coursesController.adminPublishCourse);
 router.patch('/admin/:id/corporate', authorize('ADMIN'), coursesController.updateCorporateSettings);
 
+// *** IMPORTANT: This MUST be before /:id routes to prevent Express matching
+// "lessons" as the :id parameter and blocking students with TEACHER-only auth.
+// Any enrolled student (or teacher) can stream lesson videos.
+router.get('/lessons/:lessonId/stream', coursesController.streamLessonVideo);
+
 // Teacher routes
 router.get('/my-courses', authorize('TEACHER'), coursesController.getMyCourses);
 router.post('/', authorize('TEACHER'), coursesController.createCourse);

@@ -8,6 +8,7 @@ export const adminAssignSchema = z.object({
 export const updateLessonProgressSchema = z.object({
   status: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED']),
   progressPercent: z.number().min(0).max(100).optional(),
+  lastWatchedTimestamp: z.number().min(0).optional(),
 });
 
 export type AdminAssignInput = z.infer<typeof adminAssignSchema>;

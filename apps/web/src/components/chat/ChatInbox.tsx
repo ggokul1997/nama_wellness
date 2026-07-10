@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { chatApi } from '@/lib/api/chat';
 import { enrollmentsApi } from '@/lib/api/enrollments';
 import { coursesApi } from '@/lib/api/courses';
 import type { ChatSession, ChatMessage, Course } from '@nama/shared';
+import { useSocket } from '@/components/providers/SocketProvider';
 import styles from './ChatInbox.module.css';
 
 export default function ChatInbox({ currentUserId, role }: { currentUserId: string; role: 'STUDENT' | 'TEACHER' }) {
@@ -18,24 +18,13 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const { socket } = useSocket();
 
-  // Initialize Socket connection
+  // Attach socket listeners
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-    // Get base URL by stripping /api/v1
-    const socketUrl = apiUrl.replace(/\/api\/v1\/?$/, '');
-    
-    socketRef.current = io(socketUrl, {
-      withCredentials: true,
-      transports: ['websocket', 'polling']
-    });
+    if (!socket) return;
 
-    socketRef.current.on('connect', () => {
-      console.log('Chat socket connected');
-    });
-
-    socketRef.current.on('new_message', (data: { message: ChatMessage, session?: ChatSession } | ChatMessage) => {
+    const handleNewMessage = (data: { message: ChatMessage, session?: ChatSession } | ChatMessage) => {
       // Backend was updated to send { message, session }
       const message = 'message' in data ? data.message : data;
       const fullSession = 'session' in data ? data.session : undefined;
@@ -70,9 +59,9 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
         }
         return prevSessions;
       });
-    });
+    };
 
-    socketRef.current.on('messages_read', (data: { sessionId: string, readByUserId: string }) => {
+    const handleMessagesRead = (data: { sessionId: string, readByUserId: string }) => {
       if (data.readByUserId !== currentUserId) {
         setMessages(prev => prev.map(m => 
           m.senderId === currentUserId ? { ...m, isRead: true } : m
@@ -90,39 +79,38 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
         }
         return session;
       }));
-    });
+    };
+
+    socket.on('new_message', handleNewMessage);
+    socket.on('messages_read', handleMessagesRead);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socket.off('new_message', handleNewMessage);
+      socket.off('messages_read', handleMessagesRead);
     };
-  }, []);
+  }, [socket, currentUserId]);
 
   useEffect(() => {
     fetchInitialData();
   }, [role]);
 
   useEffect(() => {
-    if (selectedSession && !selectedSession.id.startsWith('virtual_')) {
-      // Fetch initial message history
-      fetchMessages(selectedSession.id);
-      
-      // Join socket room
-      if (socketRef.current) {
-        socketRef.current.emit('join_room', selectedSession.id);
+    if (selectedSession) {
+      if (socket) {
+        socket.emit('join_room', selectedSession.id);
       }
-      
+      if (!selectedSession.id.startsWith('virtual_')) {
+        fetchMessages(selectedSession.id);
+      } else {
+        setMessages([]);
+      }
       return () => {
-        // Leave room when session changes
-        if (socketRef.current) {
-          socketRef.current.emit('leave_room', selectedSession.id);
+        if (socket) {
+          socket.emit('leave_room', selectedSession.id);
         }
       };
-    } else {
-      setMessages([]); // Clear messages for virtual session
     }
-  }, [selectedSession]);
+  }, [selectedSession, socket]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -236,8 +224,8 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
           setSessions(prev => prev.map(s => s.id === selectedSession.id ? res.data!.session : s));
           
           // Join the newly created room
-          if (socketRef.current) {
-            socketRef.current.emit('join_room', activeSessionId);
+          if (socket) {
+            socket.emit('join_room', activeSessionId);
           }
         }
       }

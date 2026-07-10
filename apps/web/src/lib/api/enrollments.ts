@@ -26,7 +26,7 @@ export const enrollmentsApi = {
   },
 
   async getCourseProgress(courseId: string) {
-    return apiFetch<{ enrollment: Enrollment }>(`/enrollments/${courseId}/progress`);
+    return apiFetch<{ enrollment: Enrollment | null }>(`/enrollments/${courseId}/progress`);
   },
 
   async updateLessonProgress(courseId: string, lessonId: string, data: UpdateLessonProgressInput) {

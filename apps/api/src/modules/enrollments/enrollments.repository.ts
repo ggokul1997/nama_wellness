@@ -76,7 +76,7 @@ export const enrollmentsRepository = {
     });
   },
 
-  async upsertLessonProgress(enrollmentId: string, lessonId: string, status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED', progressPercent: number) {
+  async upsertLessonProgress(enrollmentId: string, lessonId: string, status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED', progressPercent: number, lastWatchedTimestamp?: number) {
     return prisma.lessonProgress.upsert({
       where: {
         enrollmentId_lessonId: {
@@ -87,6 +87,7 @@ export const enrollmentsRepository = {
       update: {
         status,
         progressPercent,
+        ...(lastWatchedTimestamp !== undefined && { lastWatchedTimestamp }),
         lastAccessedAt: new Date(),
       },
       create: {
@@ -94,6 +95,7 @@ export const enrollmentsRepository = {
         lessonId,
         status,
         progressPercent,
+        ...(lastWatchedTimestamp !== undefined && { lastWatchedTimestamp }),
       },
     });
   },

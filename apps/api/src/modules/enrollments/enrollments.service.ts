@@ -134,10 +134,7 @@ export const enrollmentsService = {
 
   async getCourseProgress(userId: string, courseId: string) {
     const enrollment = await enrollmentsRepository.getCourseProgress(userId, courseId);
-    if (!enrollment) {
-      throw Errors.notFound('Enrollment not found');
-    }
-    return enrollment;
+    return enrollment || null;
   },
 
   async updateLessonProgress(userId: string, courseId: string, lessonId: string, data: UpdateLessonProgressInput) {
@@ -150,7 +147,8 @@ export const enrollmentsService = {
       enrollment.id,
       lessonId,
       data.status,
-      data.progressPercent ?? (data.status === 'COMPLETED' ? 100 : 0)
+      data.progressPercent ?? (data.status === 'COMPLETED' ? 100 : 0),
+      data.lastWatchedTimestamp
     );
 
     // Check if course is now fully completed
