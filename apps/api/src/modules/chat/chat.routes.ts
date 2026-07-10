@@ -9,4 +9,5 @@ chatRouter.use(authenticate);
 chatRouter.get('/sessions', chatController.getSessions);
 chatRouter.post('/sessions', chatController.createSession);
 chatRouter.get('/sessions/:id/messages', chatController.getMessages);
+chatRouter.post('/sessions/:id/read', chatController.markAsRead);
 chatRouter.post('/sessions/:id/messages', chatController.sendMessage);

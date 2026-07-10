@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { chatService } from './chat.service.js';
+import { socketService } from '../../infrastructure/socket/socket.service.js';
 
 export const chatController = {
   async getSessions(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -31,7 +32,25 @@ export const chatController = {
       const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : 0;
       const take = req.query.take ? parseInt(req.query.take as string, 10) : 50;
       const messages = await chatService.getMessages(id, req.user!.sub, skip, take);
+      
+      // Tell other clients in the room that this user has read the messages
+      socketService.getIo().to(id).emit('messages_read', { sessionId: id, readByUserId: req.user!.sub });
+      
       res.json({ success: true, data: { messages } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async markAsRead(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = req.params.id as string;
+      await chatService.markAsRead(id, req.user!.sub);
+      
+      // Broadcast that messages were read
+      socketService.getIo().to(id).emit('messages_read', { sessionId: id, readByUserId: req.user!.sub });
+      
+      res.json({ success: true });
     } catch (error) {
       next(error);
     }
@@ -41,7 +60,11 @@ export const chatController = {
     try {
       const id = req.params.id as string;
       const { content } = req.body;
-      const message = await chatService.sendMessage(id, req.user!.sub, content);
+      const { message, session } = await chatService.sendMessage(id, req.user!.sub, content);
+      
+      // Emit the new message to both participants' personal rooms
+      socketService.getIo().to(session.studentId).to(session.teacherId).emit('new_message', { message, session });
+      
       res.status(201).json({ success: true, data: { message } });
     } catch (error) {
       next(error);

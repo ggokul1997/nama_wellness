@@ -367,6 +367,25 @@
 }
 
 
+.dateSeparator {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 8px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.dateSeparatorText {
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--surface-border);
+}
+
 .emptyStateSubtitle {
   font-size: 14px;
   color: var(--text-muted);

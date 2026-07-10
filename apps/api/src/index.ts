@@ -4,6 +4,7 @@ import { config } from './config/index.js';
 import { logger } from './infrastructure/logger/logger.js';
 import { connectDatabase, disconnectDatabase } from './infrastructure/database/prisma.client.js';
 import { connectRedis, disconnectRedis } from './infrastructure/redis/redis.client.js';
+import { socketService } from './infrastructure/socket/socket.service.js';
 import type { Server } from 'http';
 
 let server: Server;
@@ -25,6 +26,9 @@ async function start(): Promise<void> {
       '🚀 Nama Wellness API started',
     );
   });
+
+  // Initialize WebSockets
+  socketService.initialize(server);
 }
 
 async function shutdown(signal: string): Promise<void> {

@@ -14,6 +14,11 @@ export const chatApi = {
   getMessages: (sessionId: string, skip: number = 0, take: number = 50) =>
     apiFetch<{ messages: ChatMessage[] }>(`/chat/sessions/${sessionId}/messages?skip=${skip}&take=${take}`),
 
+  markAsRead: (sessionId: string) =>
+    apiFetch<{ success: boolean }>(`/chat/sessions/${sessionId}/read`, {
+      method: 'POST'
+    }),
+
   sendMessage: (sessionId: string, content: string) =>
     apiFetch<{ message: ChatMessage }>(`/chat/sessions/${sessionId}/messages`, {
       method: 'POST',

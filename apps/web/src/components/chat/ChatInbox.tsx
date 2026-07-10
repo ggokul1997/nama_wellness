@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { chatApi } from '@/lib/api/chat';
 import { enrollmentsApi } from '@/lib/api/enrollments';
 import { coursesApi } from '@/lib/api/courses';
@@ -17,6 +18,86 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<Socket | null>(null);
+
+  // Initialize Socket connection
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+    // Get base URL by stripping /api/v1
+    const socketUrl = apiUrl.replace(/\/api\/v1\/?$/, '');
+    
+    socketRef.current = io(socketUrl, {
+      withCredentials: true,
+      transports: ['websocket', 'polling']
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('Chat socket connected');
+    });
+
+    socketRef.current.on('new_message', (data: { message: ChatMessage, session?: ChatSession } | ChatMessage) => {
+      // Backend was updated to send { message, session }
+      const message = 'message' in data ? data.message : data;
+      const fullSession = 'session' in data ? data.session : undefined;
+      
+      setMessages(prev => {
+        // Prevent duplicate messages
+        if (prev.some(m => m.id === message.id)) return prev;
+        
+        // Re-sort just to be safe, though they should be chronological
+        const newArr = [...prev, message].sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        return newArr;
+      });
+      
+      // Update the session's latest message in the sidebar, or add if new
+      setSessions(prevSessions => {
+        const exists = prevSessions.some(s => s.id === message.sessionId);
+        if (exists) {
+          return prevSessions.map(session => {
+            if (session.id === message.sessionId) {
+              return {
+                ...session,
+                messages: [message, ...(session.messages || [])]
+              };
+            }
+            return session;
+          });
+        } else if (fullSession) {
+           fullSession.messages = [message];
+           return [fullSession, ...prevSessions];
+        }
+        return prevSessions;
+      });
+    });
+
+    socketRef.current.on('messages_read', (data: { sessionId: string, readByUserId: string }) => {
+      if (data.readByUserId !== currentUserId) {
+        setMessages(prev => prev.map(m => 
+          m.senderId === currentUserId ? { ...m, isRead: true } : m
+        ));
+      }
+      
+      setSessions(prevSessions => prevSessions.map(session => {
+        if (session.id === data.sessionId) {
+          const updatedMessages = session.messages?.map(m => {
+            if (data.readByUserId === currentUserId && m.senderId !== currentUserId) return { ...m, isRead: true };
+            if (data.readByUserId !== currentUserId && m.senderId === currentUserId) return { ...m, isRead: true };
+            return m;
+          });
+          return { ...session, messages: updatedMessages };
+        }
+        return session;
+      }));
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     fetchInitialData();
@@ -24,19 +105,34 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
 
   useEffect(() => {
     if (selectedSession && !selectedSession.id.startsWith('virtual_')) {
+      // Fetch initial message history
       fetchMessages(selectedSession.id);
-      const interval = setInterval(() => {
-        fetchMessages(selectedSession.id, true);
-      }, 3000); // Poll every 3 seconds
-      return () => clearInterval(interval);
+      
+      // Join socket room
+      if (socketRef.current) {
+        socketRef.current.emit('join_room', selectedSession.id);
+      }
+      
+      return () => {
+        // Leave room when session changes
+        if (socketRef.current) {
+          socketRef.current.emit('leave_room', selectedSession.id);
+        }
+      };
     } else {
       setMessages([]); // Clear messages for virtual session
     }
   }, [selectedSession]);
 
   useEffect(() => {
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg && lastMsg.senderId !== currentUserId && !lastMsg.isRead) {
+        chatApi.markAsRead(selectedSession?.id || lastMsg.sessionId).catch(console.error);
+      }
+    }
     scrollToBottom();
-  }, [messages]);
+  }, [messages, currentUserId, selectedSession]);
 
   const fetchInitialData = async () => {
     try {
@@ -138,22 +234,19 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
           
           // Update the virtual session in the list with the real one
           setSessions(prev => prev.map(s => s.id === selectedSession.id ? res.data!.session : s));
+          
+          // Join the newly created room
+          if (socketRef.current) {
+            socketRef.current.emit('join_room', activeSessionId);
+          }
         }
       }
 
-      const msgRes = await chatApi.sendMessage(activeSessionId, newMessage);
-      if (msgRes.data?.message) {
-        setMessages((prev) => [...prev, msgRes.data!.message]);
-        setNewMessage('');
-        
-        // Update session preview without full refetch
-        setSessions(prev => prev.map(s => {
-          if (s.id === activeSessionId) {
-            return { ...s, messages: [msgRes.data!.message] };
-          }
-          return s;
-        }));
-      }
+      // We only fire sendMessage API now. The socket event 'new_message' will update our UI 
+      // automatically when the server broadcasts it.
+      await chatApi.sendMessage(activeSessionId, newMessage);
+      setNewMessage('');
+      
     } catch (err) {
       console.error('Failed to send message:', err);
     }
@@ -195,9 +288,19 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
               }}
             >
               {teacherCourses.length === 0 && <option value="">No courses created yet</option>}
-              {teacherCourses.map(c => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
+              {teacherCourses.map(c => {
+                const hasUnread = sessions.some(s => 
+                  s.courseId === c.id && 
+                  s.messages?.[0] && 
+                  !s.messages[0].isRead && 
+                  s.messages[0].senderId !== currentUserId
+                );
+                return (
+                  <option key={c.id} value={c.id}>
+                    {hasUnread ? '🟢 ' : ''}{c.title}
+                  </option>
+                );
+              })}
             </select>
           )}
         </div>
@@ -278,10 +381,36 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
                   </span>
                 </div>
               ) : (
-                messages.map((msg) => {
+                messages.map((msg, index) => {
                   const isMe = msg.senderId === currentUserId;
+                  const currentMsgDate = new Date(msg.createdAt).toLocaleDateString();
+                  const prevMsgDate = index > 0 ? new Date(messages[index - 1]?.createdAt || 0).toLocaleDateString() : null;
+                  const showDateSeparator = currentMsgDate !== prevMsgDate;
+                  
+                  let displayDate = '';
+                  if (showDateSeparator) {
+                    const msgDateObj = new Date(msg.createdAt);
+                    const today = new Date();
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    
+                    if (currentMsgDate === today.toLocaleDateString()) {
+                      displayDate = 'Today';
+                    } else if (currentMsgDate === yesterday.toLocaleDateString()) {
+                      displayDate = 'Yesterday';
+                    } else {
+                      displayDate = msgDateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+                  }
+
                   return (
-                    <div key={msg.id} className={`${styles.messageRow} ${isMe ? styles.messageRowMe : styles.messageRowThem}`}>
+                    <React.Fragment key={msg.id}>
+                      {showDateSeparator && (
+                        <div className={styles.dateSeparator}>
+                          <span className={styles.dateSeparatorText}>{displayDate}</span>
+                        </div>
+                      )}
+                      <div className={`${styles.messageRow} ${isMe ? styles.messageRowMe : styles.messageRowThem}`}>
                       <div className={`${styles.messageBubble} ${isMe ? styles.messageBubbleMe : styles.messageBubbleThem}`}>
                         {/* Chat tail decorative element */}
                         <div className={`${styles.messageTail} ${isMe ? styles.messageTailMe : styles.messageTailThem}`}>
@@ -301,7 +430,8 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
                           )}
                         </div>
                       </div>
-                    </div>
+                      </div>
+                    </React.Fragment>
                   );
                 })
               )}

@@ -32,6 +32,17 @@ export const chatService = {
     return chatRepository.getMessages(sessionId, skip, take);
   },
 
+  async markAsRead(sessionId: string, userId: string) {
+    const session = await chatRepository.getSessionById(sessionId);
+    if (!session) throw Errors.notFound('Session');
+    if (session.studentId !== userId && session.teacherId !== userId) {
+      throw Errors.forbidden('Access denied to this session');
+    }
+    
+    await chatRepository.markMessagesAsRead(sessionId, userId);
+    return true;
+  },
+
   async sendMessage(sessionId: string, senderId: string, content: string) {
     if (!content || !content.trim()) {
       throw Errors.badRequest('Message content cannot be empty');
@@ -43,6 +54,7 @@ export const chatService = {
       throw Errors.forbidden('Access denied to this session');
     }
 
-    return chatRepository.createMessage(sessionId, senderId, content.trim());
+    const message = await chatRepository.createMessage(sessionId, senderId, content.trim());
+    return { message, session };
   },
 };
