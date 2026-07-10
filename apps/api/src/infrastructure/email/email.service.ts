@@ -24,7 +24,7 @@ async function getTransporter(): Promise<Transporter> {
     transporter = nodemailer.createTransport({
       host: config.SMTP_HOST,
       port: config.SMTP_PORT || 1025,
-      secure: false,
+      secure: config.SMTP_PORT === 465,
       auth: config.SMTP_USER ? {
         user: config.SMTP_USER,
         pass: config.SMTP_PASS || '',

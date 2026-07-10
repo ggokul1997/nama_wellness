@@ -48,11 +48,7 @@ export default function RegisterPage() {
           </h1>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             We sent a 6-digit verification code to <strong style={{ color: 'var(--text-primary)' }}>{successEmail}</strong>.
-            Check your Ethereal inbox at{' '}
-            <a href="https://ethereal.email/messages" target="_blank" rel="noreferrer"
-              style={{ color: 'var(--brand-400)' }}>
-              ethereal.email/messages
-            </a>
+            Please check your inbox (and spam folder) for the code.
           </p>
           <button
             onClick={() => router.push(`${ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(successEmail)}`)}
