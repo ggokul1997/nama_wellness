@@ -46,7 +46,14 @@ function ResetPasswordContent() {
         {apiError && <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>⚠️ {apiError}</div>}
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <input type="hidden" {...register('email')} />
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="label" htmlFor="reset-email">Email address</label>
+            <input id="reset-email" type="email" autoComplete="email"
+              className={`input ${errors.email ? 'error' : ''}`}
+              placeholder="you@example.com"
+              {...register('email')} />
+            {errors.email && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.375rem' }}>{errors.email.message}</p>}
+          </div>
 
           <div style={{ marginBottom: '1rem' }}>
             <label className="label" htmlFor="reset-code">Reset code</label>

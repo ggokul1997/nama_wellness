@@ -78,7 +78,14 @@ function VerifyEmailContent() {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <input type="hidden" {...register('email')} />
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="label" htmlFor="verify-email">Email address</label>
+              <input id="verify-email" type="email" autoComplete="email"
+                className={`input ${errors.email ? 'error' : ''}`}
+                placeholder="you@example.com"
+                {...register('email')} />
+              {errors.email && <p style={{ color: 'var(--error)', fontSize: '0.8125rem', marginTop: '0.375rem' }}>{errors.email.message}</p>}
+            </div>
             <div style={{ marginBottom: '1.5rem' }}>
               <label className="label" htmlFor="verify-code">Verification code</label>
               <input
