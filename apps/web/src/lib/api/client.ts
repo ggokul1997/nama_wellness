@@ -80,6 +80,36 @@ export async function apiFetch<T>(
   }
 
   if (!data.success) {
+    // Automatic token refresh interceptor for client-side requests
+    if (response.status === 401 && isBrowser && path !== '/auth/refresh' && path !== '/auth/login' && auth) {
+      try {
+        console.log(`[AUTH] Token expired, attempting refresh for ${path}...`);
+        // Call the refresh endpoint
+        const refreshRes = await fetch(`${baseUrl}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (refreshRes.ok) {
+          console.log(`[AUTH] Refresh successful, retrying original request...`);
+          // Retry the original request
+          const retryResponse = await fetch(`${baseUrl}${finalPath}`, {
+            ...init,
+            credentials: 'include',
+            headers,
+          });
+          const retryData = (await retryResponse.json()) as ApiResponse<T>;
+          if (retryData.success) {
+            return retryData;
+          }
+        }
+      } catch (err) {
+        console.error('[AUTH] Silent refresh failed', err);
+      }
+      // If refresh fails, let it fall through and throw the 401
+    }
+
     throw new ApiError(
       data.error?.code ?? 'UNKNOWN_ERROR',
       data.error?.message ?? 'An error occurred',
