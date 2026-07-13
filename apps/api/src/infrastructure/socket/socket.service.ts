@@ -10,7 +10,7 @@ class SocketService {
   public initialize(httpServer: HttpServer): void {
     this.io = new Server(httpServer, {
       cors: {
-        origin: config.CORS_ORIGINS || 'http://localhost:3000',
+        origin: config.CORS_ORIGINS.split(',').map((o) => o.trim()),
         methods: ['GET', 'POST'],
         credentials: true
       },

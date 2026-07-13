@@ -19,7 +19,7 @@ let transporter: Transporter | null = null;
 async function getTransporter(): Promise<Transporter> {
   if (transporter) return transporter;
 
-  // Use custom SMTP if provided (e.g., Mailpit via Docker)
+  // Use custom SMTP if provided (e.g., Resend in production, Mailpit in Docker dev)
   if (config.SMTP_HOST) {
     transporter = nodemailer.createTransport({
       host: config.SMTP_HOST,
@@ -32,6 +32,15 @@ async function getTransporter(): Promise<Transporter> {
     });
     logger.info({ host: config.SMTP_HOST, port: config.SMTP_PORT || 1025 }, '📧 Custom SMTP configured');
     return transporter;
+  }
+
+  // In production, SMTP_HOST MUST be configured. Failing silently here means
+  // real users will never receive verification or password-reset emails.
+  if (config.NODE_ENV === 'production') {
+    throw new Error(
+      '❌ SMTP_HOST is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS environment variables. ' +
+      'Without this, no emails will be delivered to real users.'
+    );
   }
 
   if (config.ETHEREAL_USER && config.ETHEREAL_PASS) {

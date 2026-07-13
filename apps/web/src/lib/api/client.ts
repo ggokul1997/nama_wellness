@@ -61,7 +61,9 @@ export async function apiFetch<T>(
     finalPath = `${path}${separator}_t=${Date.now()}`;
   }
 
-  console.log(`[DEBUG] apiFetch starting for ${path}`, { auth, finalPath, isBrowser, cookies: isBrowser ? document.cookie : 'server' });
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[DEBUG] apiFetch starting for ${path}`, { auth, finalPath, isBrowser, cookies: isBrowser ? document.cookie : 'server' });
+  }
 
   const baseUrl = absoluteUrl ? (process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000/api/v1') : API_URL;
 
@@ -73,7 +75,9 @@ export async function apiFetch<T>(
 
   const data = (await response.json()) as ApiResponse<T>;
   
-  console.log(`[DEBUG] apiFetch completed for ${path}`, { status: response.status, success: data.success, data });
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[DEBUG] apiFetch completed for ${path}`, { status: response.status, success: data.success, data });
+  }
 
   if (!data.success) {
     throw new ApiError(

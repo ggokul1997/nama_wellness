@@ -26,7 +26,7 @@ async function start(): Promise<void> {
       {
         port: config.PORT,
         env: config.NODE_ENV,
-        health: `http://localhost:${config.PORT}/api/v1/health`,
+        health: `${config.API_BASE_URL}/api/v1/health`,
       },
       '🚀 Nama Wellness API started',
     );

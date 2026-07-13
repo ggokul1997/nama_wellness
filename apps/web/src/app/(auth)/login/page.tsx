@@ -33,8 +33,9 @@ function LoginContent() {
       await refreshSession();
       const user = res.data!.user;
 
-      // Set role cookie for middleware
-      document.cookie = `nama_auth_role=${user.roles[0]?.role ?? ''}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
+      // Set role cookie for middleware — add Secure flag on HTTPS (production)
+      const isSecure = window.location.protocol === 'https:';
+      document.cookie = `nama_auth_role=${user.roles[0]?.role ?? ''}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax${isSecure ? '; Secure' : ''}`;
 
       // Redirect based on role
       const role = user.roles[0]?.role;

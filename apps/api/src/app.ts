@@ -12,6 +12,10 @@ import { v1Router } from './routes/index.js';
 export function createApp(): express.Express {
   const app = express();
 
+  // Trust the first reverse proxy (Render, Vercel, Cloudflare, etc.)
+  // Required so Express sees req.ip correctly and Secure cookies work over HTTPS.
+  app.set('trust proxy', 1);
+
   // Security headers
   app.use(helmet());
 
