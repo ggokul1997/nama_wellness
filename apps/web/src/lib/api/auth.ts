@@ -17,7 +17,6 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
       auth: false,
-      absoluteUrl: true,
     }),
 
   corporateRegister: (data: CorporateRegisterRequest) =>
@@ -25,7 +24,6 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
       auth: false,
-      absoluteUrl: true,
     }),
 
   login: (data: LoginRequest) =>
@@ -33,7 +31,6 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
       auth: false,
-      absoluteUrl: true,
     }),
 
   refresh: (refreshToken: string) =>
@@ -54,7 +51,6 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
       auth: false,
-      absoluteUrl: true,
     }),
 
   resendVerification: (email: string) =>
