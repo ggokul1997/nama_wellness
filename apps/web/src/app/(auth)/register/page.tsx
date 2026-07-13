@@ -202,6 +202,11 @@ export default function RegisterPage() {
           <Link href={ROUTES.LOGIN} style={{ color: 'var(--brand-400)', fontWeight: 600, textDecoration: 'none' }}>
             Sign in
           </Link>
+          <br /><br />
+          Received an employee invitation?{' '}
+          <Link href="/reset-password" style={{ color: 'var(--brand-400)', fontWeight: 600, textDecoration: 'none' }}>
+            Set up your account
+          </Link>
         </p>
       </div>
     </div>

@@ -154,6 +154,11 @@ export default function CorporateRegisterPage() {
           <Link href={ROUTES.REGISTER} style={{ color: 'var(--brand-400)', fontWeight: 500, textDecoration: 'none' }}>
             Register here
           </Link>
+          <br /><br />
+          Received an employee invitation?{' '}
+          <Link href="/reset-password" style={{ color: 'var(--brand-400)', fontWeight: 500, textDecoration: 'none' }}>
+            Set up your account
+          </Link>
         </p>
       </div>
     </div>

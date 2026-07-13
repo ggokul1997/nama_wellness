@@ -161,6 +161,11 @@ function LoginContent() {
           <Link href={ROUTES.REGISTER_CORPORATE} style={{ color: 'var(--brand-400)', fontWeight: 600, textDecoration: 'none' }}>
             Corporate register
           </Link>
+          <br /><br />
+          Received an employee invitation?{' '}
+          <Link href="/reset-password" style={{ color: 'var(--brand-400)', fontWeight: 600, textDecoration: 'none' }}>
+            Set up your account
+          </Link>
         </p>
       </div>
     </div>
