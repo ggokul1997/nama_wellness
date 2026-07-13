@@ -6,7 +6,6 @@ import {
   registerSchema,
   corporateRegisterSchema,
   loginSchema,
-  refreshSchema,
   verifyEmailSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
