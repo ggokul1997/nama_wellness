@@ -12,9 +12,10 @@ export function errorHandler(
   _next: NextFunction,
 ): void {
   // Zod validation error
-  if (err instanceof ZodError) {
+  if (err instanceof ZodError || (err && typeof err === 'object' && 'name' in err && err.name === 'ZodError')) {
+    const zodErr = err as ZodError;
     const details: Record<string, string[]> = {};
-    for (const issue of err.issues) {
+    for (const issue of zodErr.issues) {
       const key = issue.path.join('.') || 'root';
       details[key] ??= [];
       details[key]!.push(issue.message);

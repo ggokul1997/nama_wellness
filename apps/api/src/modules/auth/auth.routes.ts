@@ -19,7 +19,7 @@ export const authRouter: Router = Router();
 authRouter.post('/register', validate(registerSchema), authController.register);
 authRouter.post('/register/corporate', validate(corporateRegisterSchema), authController.corporateRegister);
 authRouter.post('/login', validate(loginSchema), authController.login);
-authRouter.post('/refresh', validate(refreshSchema), authController.refresh);
+authRouter.post('/refresh', authController.refresh);
 
 // E2E Test Helper
 if (process.env.NODE_ENV !== 'production') {
