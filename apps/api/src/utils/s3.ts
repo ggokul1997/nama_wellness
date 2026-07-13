@@ -62,12 +62,34 @@ export const s3Utils = {
   },
 
   /**
+   * Safely extracts the S3 key from any generated fileUrl, regardless of whether 
+   * it uses the standard S3 endpoint or the Supabase public object endpoint.
+   */
+  extractKeyFromUrl(fileUrl: string): string | null {
+    // Standard S3 format: {S3_ENDPOINT}/{BUCKET_NAME}/key
+    const standardPrefix = `${S3_ENDPOINT}/${BUCKET_NAME}/`;
+    if (fileUrl.startsWith(standardPrefix)) {
+      return fileUrl.substring(standardPrefix.length);
+    }
+    
+    // Supabase Public format: {PUBLIC_ENDPOINT}/{BUCKET_NAME}/key
+    if (S3_ENDPOINT.includes('.supabase.co') && S3_ENDPOINT.includes('/storage/v1/s3')) {
+      const publicEndpoint = S3_ENDPOINT.replace(/\/storage\/v1\/s3\/?$/, '/storage/v1/object/public');
+      const supabasePrefix = `${publicEndpoint}/${BUCKET_NAME}/`;
+      if (fileUrl.startsWith(supabasePrefix)) {
+        return fileUrl.substring(supabasePrefix.length);
+      }
+    }
+    
+    return null;
+  },
+
+  /**
    * Helper to convert an absolute S3 fileUrl back to a signed URL for viewing.
    */
   async signDocumentUrl(fileUrl: string, expiresInSeconds = 3600): Promise<string> {
-    const bucketPrefix = `${S3_ENDPOINT}/${BUCKET_NAME}/`;
-    if (!fileUrl.startsWith(bucketPrefix)) return fileUrl;
-    const key = fileUrl.replace(bucketPrefix, '');
+    const key = this.extractKeyFromUrl(fileUrl);
+    if (!key) return fileUrl;
     return this.generatePresignedGetUrl(key, expiresInSeconds);
   },
 
@@ -75,12 +97,11 @@ export const s3Utils = {
    * Streams a file from S3 directly to the Express response, supporting HTTP Range requests.
    */
   async streamObject(fileUrl: string, rangeHeader: string | undefined, res: any): Promise<void> {
-    const bucketPrefix = `${S3_ENDPOINT}/${BUCKET_NAME}/`;
-    if (!fileUrl.startsWith(bucketPrefix)) {
+    const key = this.extractKeyFromUrl(fileUrl);
+    if (!key) {
       res.status(404).send('File not found or not in S3');
       return;
     }
-    const key = fileUrl.replace(bucketPrefix, '');
 
     try {
       const command = new GetObjectCommand({
