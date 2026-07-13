@@ -16,7 +16,19 @@ const nextConfig: NextConfig = {
         source: '/api/v1/:path*',
         destination: `${apiBaseUrl}/api/v1/:path*`,
       },
+      {
+        source: '/socket.io/:path*',
+        destination: `${apiBaseUrl}/socket.io/:path*`,
+      },
     ];
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
 };
 

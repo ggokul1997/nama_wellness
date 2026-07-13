@@ -32,13 +32,16 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-    const socketUrl = apiUrl.replace(/\/api\/v1\/?$/, '');
+    const isProd = process.env.NODE_ENV === 'production';
+    // In production (Vercel), we must route through the Next.js proxy so cookies are included.
+    // The next.config.ts will rewrite /socket.io to Render.
+    const socketUrl = isProd ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1').replace(/\/api\/v1\/?$/, '');
 
     if (!socketRef.current) {
       socketRef.current = io(socketUrl, {
         withCredentials: true,
-        transports: ['websocket', 'polling'],
+        // Vercel serverless does not support WebSockets, so we must force polling in production.
+        transports: isProd ? ['polling'] : ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
