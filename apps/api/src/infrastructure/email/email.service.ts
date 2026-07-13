@@ -24,7 +24,8 @@ async function getTransporter(): Promise<Transporter> {
     transporter = nodemailer.createTransport({
       host: config.SMTP_HOST,
       port: config.SMTP_PORT || 1025,
-      secure: config.SMTP_PORT === 465,
+      // Ports 465 and 2465 use implicit TLS. Other ports (587, 2525) use STARTTLS.
+      secure: config.SMTP_PORT === 465 || config.SMTP_PORT === 2465,
       auth: config.SMTP_USER ? {
         user: config.SMTP_USER,
         pass: config.SMTP_PASS || '',
