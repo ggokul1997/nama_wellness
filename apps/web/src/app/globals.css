@@ -151,29 +151,29 @@
   --gradient-hero:  radial-gradient(ellipse 80% 60% at 50% -10%, rgba(14, 165, 233, 0.3) 0%, transparent 70%);
 }
 
-/* PLATFORM ADMIN (NAMA Core) - Slate/Crimson */
+/* PLATFORM ADMIN (NAMA Core) - Crimson */
 [data-theme="admin"] {
-  --brand-50:  #f8fafc;
-  --brand-100: #f1f5f9;
-  --brand-200: #e2e8f0;
-  --brand-300: #cbd5e1;
-  --brand-400: #94a3b8;
-  --brand-500: #64748b;
-  --brand-600: #475569;
-  --brand-700: #334155;
-  --brand-800: #1e293b;
-  --brand-900: #0f172a;
-  --brand-950: #020617;
+  --brand-50:  #fff1f2;
+  --brand-100: #ffe4e6;
+  --brand-200: #fecdd3;
+  --brand-300: #fda4af;
+  --brand-400: #fb7185;
+  --brand-500: #e11d48;
+  --brand-600: #be123c;
+  --brand-700: #9f1239;
+  --brand-800: #881337;
+  --brand-900: #4c0519;
+  --brand-950: #2a040f;
 
-  --surface-border:   rgba(100, 116, 139, 0.25);
-  --surface-border-strong: rgba(100, 116, 139, 0.45);
+  --surface-border:   rgba(225, 29, 72, 0.15);
+  --surface-border-strong: rgba(225, 29, 72, 0.35);
   
-  --shadow-glow: 0 0 32px rgba(190, 18, 60, 0.25); /* Crimson glow for admin */
-  --glass-border: rgba(100, 116, 139, 0.3);
+  --shadow-glow: 0 0 32px rgba(225, 29, 72, 0.25);
+  --glass-border: rgba(225, 29, 72, 0.2);
   
-  --gradient-brand: linear-gradient(135deg, #64748b 0%, #334155 50%, #be123c 100%);
-  --gradient-card:  linear-gradient(135deg, rgba(100, 116, 139, 0.08), rgba(190, 18, 60, 0.04));
-  --gradient-hero:  radial-gradient(ellipse 80% 60% at 50% -10%, rgba(190, 18, 60, 0.3) 0%, transparent 70%);
+  --gradient-brand: linear-gradient(135deg, #e11d48 0%, #be123c 50%, #9f1239 100%);
+  --gradient-card:  linear-gradient(135deg, rgba(225, 29, 72, 0.08), rgba(190, 18, 60, 0.04));
+  --gradient-hero:  radial-gradient(ellipse 80% 60% at 50% -10%, rgba(225, 29, 72, 0.3) 0%, transparent 70%);
 }
 
 /* ============================================================= */
