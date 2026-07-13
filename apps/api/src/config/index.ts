@@ -27,9 +27,17 @@ const envSchema = z.object({
   ETHEREAL_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default('Nama Wellness <noreply@namawellness.com>'),
 
-  // App
-  API_BASE_URL: z.string().url().default('http://localhost:4000'),
-  WEB_BASE_URL: z.string().url().default('http://localhost:3000'),
+  // App URLs — default to localhost in development.
+  // In production, set these to your actual Render and Vercel URLs.
+  // Empty string is treated the same as "not set" (falls back to default).
+  API_BASE_URL: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() ? v : undefined),
+    z.string().url().default('http://localhost:4000'),
+  ),
+  WEB_BASE_URL: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() ? v : undefined),
+    z.string().url().default('http://localhost:3000'),
+  ),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
 
   // AWS / S3
