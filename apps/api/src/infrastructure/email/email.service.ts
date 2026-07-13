@@ -95,9 +95,18 @@ interface SendEmailOptions {
 }
 
 async function sendEmail(options: SendEmailOptions): Promise<void> {
-  const transport = await getTransporter();
+  const transporter = await getTransporter();
 
-  const info = await transport.sendMail({
+  // In production, if the email is a test domain, just skip sending to avoid 
+  // burning Resend limits or causing crash errors from Resend blocking it.
+  // The OTP is already logged to the console a few lines above.
+  const isTestEmail = options.to.endsWith('@test.com') || options.to.endsWith('@example.com');
+  if (isTestEmail) {
+    logger.info({ email: options.to }, '📧 Skipped sending email to test domain (check logs for OTP)');
+    return;
+  }
+
+  const info = await transporter.sendMail({
     from: config.EMAIL_FROM,
     to: options.to,
     subject: options.subject,
