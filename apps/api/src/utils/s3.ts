@@ -38,8 +38,14 @@ export const s3Utils = {
       expiresIn: expiresInSeconds,
     });
 
-    // The public URL to access the file after upload (assuming public-read or accessible via CF)
-    const fileUrl = `${S3_ENDPOINT}/${BUCKET_NAME}/${key}`;
+    // The public URL to access the file after upload
+    let fileUrl = `${S3_ENDPOINT}/${BUCKET_NAME}/${key}`;
+    
+    // If using Supabase S3, the public URL must use /object/public/ instead of the /s3/ endpoint
+    if (S3_ENDPOINT.includes('.supabase.co') && S3_ENDPOINT.includes('/storage/v1/s3')) {
+      const publicEndpoint = S3_ENDPOINT.replace(/\/storage\/v1\/s3\/?$/, '/storage/v1/object/public');
+      fileUrl = `${publicEndpoint}/${BUCKET_NAME}/${key}`;
+    }
 
     return { uploadUrl, fileUrl, key };
   },
