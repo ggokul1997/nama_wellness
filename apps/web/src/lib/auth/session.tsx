@@ -56,12 +56,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await apiFetch('/auth/logout', { method: 'POST', absoluteUrl: true });
+      // Must not use absoluteUrl: true so the Set-Cookie headers are accepted by the browser
+      await apiFetch('/auth/logout', { method: 'POST' });
     } catch (err) {
       console.error('Logout failed:', err);
     } finally {
+      // Clear local state
       setState({ user: null, roles: [], isLoading: false, error: null });
-      // Redirect to home or login page after logout
+      // Clear the middleware routing cookie
+      const isSecure = window.location.protocol === 'https:';
+      document.cookie = `nama_auth_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+      // Redirect to login page
       window.location.href = '/login';
     }
   };
