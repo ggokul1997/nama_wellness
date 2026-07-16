@@ -63,7 +63,7 @@ export function NotificationBell() {
         🔔
         {unreadCount > 0 && (
           <span style={{
-            position: 'absolute', top: 0, right: 0, background: 'var(--danger-500)', 
+            position: 'absolute', top: 0, right: 0, background: '#ef4444', 
             color: 'white', borderRadius: '50%', width: '18px', height: '18px', 
             fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontWeight: 'bold'

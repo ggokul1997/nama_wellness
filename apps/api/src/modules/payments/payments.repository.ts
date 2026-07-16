@@ -52,6 +52,22 @@ export class PaymentsRepository {
     });
   }
 
+  async linkBookingToTransaction(transactionId: string, bookingId: string) {
+    return prisma.$transaction(async (tx) => {
+      // 1. Mark booking as confirmed
+      const booking = await tx.individualSessionBooking.update({
+        where: { id: bookingId },
+        data: { status: 'CONFIRMED' }
+      });
+      // 2. Link transaction
+      await tx.transaction.update({
+        where: { id: transactionId },
+        data: { bookingId }
+      });
+      return booking;
+    });
+  }
+
   async getTransactionsByUser(userId: string) {
     return prisma.transaction.findMany({
       where: { userId },
@@ -61,6 +77,11 @@ export class PaymentsRepository {
             id: true,
             title: true,
             coverImageUrl: true,
+          }
+        },
+        booking: {
+          include: {
+            teacher: { select: { profile: { select: { firstName: true, lastName: true } } } },
           }
         }
       },
@@ -72,14 +93,21 @@ export class PaymentsRepository {
     return prisma.transaction.findMany({
       where: {
         status: 'SUCCESS',
-        course: {
-          teacherId: teacherId
-        }
+        OR: [
+          { course: { teacherId: teacherId } },
+          { booking: { teacherId: teacherId } }
+        ]
       },
       include: {
         course: {
           select: {
             title: true,
+          }
+        },
+        booking: {
+          select: {
+            scheduledAt: true,
+            durationMinutes: true,
           }
         },
         user: {

@@ -10,6 +10,7 @@ export type * from './types/enrollment.types.js';
 export type * from './types/earnings.types.js';
 export type * from './types/company.types.js';
 export type * from './types/chat.types.js';
+export type * from './types/bookings.types.js';
 
 // Constants
 export * from './constants/roles.js';
@@ -22,3 +23,4 @@ export * from './validators/course.schema.js';
 export * from './validators/study-material.schema.js';
 export * from './validators/enrollment.schema.js';
 export * from './validators/engagement.schema.js';
+export * from './validators/bookings.schema.js';

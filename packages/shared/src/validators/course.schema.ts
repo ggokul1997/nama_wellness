@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const CourseTypeEnum = z.enum(['LIVE', 'RECORDED', 'HYBRID', 'INDIVIDUAL']);
+export const CourseTypeEnum = z.enum(['RECORDED', 'HYBRID']);
 
 export const createCourseSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters').max(100, 'Title is too long'),
@@ -19,7 +19,7 @@ export const createModuleSchema = z.object({
 
 export const updateModuleSchema = createModuleSchema.partial();
 
-export const LessonTypeEnum = z.enum(['VIDEO', 'DOCUMENT', 'LIVE']);
+export const LessonTypeEnum = z.enum(['VIDEO', 'DOCUMENT']);
 
 export const createLessonSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title is too long'),

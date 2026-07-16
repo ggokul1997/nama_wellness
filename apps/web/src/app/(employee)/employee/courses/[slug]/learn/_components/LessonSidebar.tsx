@@ -6,6 +6,10 @@ interface LessonSidebarProps {
   activeLesson: Lesson | null;
   onSelectLesson: (lesson: Lesson) => void;
   getLessonStatus: (lessonId: string) => string;
+  onToggleLessonStatus?: (lessonId: string, currentStatus: string) => void;
+  onClaimCertificate?: () => void;
+  onLeaveReview?: () => void;
+  claimingCert?: boolean;
 }
 
 export function LessonSidebar({ 
@@ -13,13 +17,17 @@ export function LessonSidebar({
   enrollment, 
   activeLesson, 
   onSelectLesson, 
-  getLessonStatus 
+  getLessonStatus,
+  onToggleLessonStatus,
+  onClaimCertificate,
+  onLeaveReview,
+  claimingCert,
 }: LessonSidebarProps) {
   return (
     <aside style={{ width: '300px', borderRight: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', background: 'var(--surface-color)' }}>
       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{course.title}</h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Status: {enrollment.status}</p>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Status: {enrollment.status}</p>
       </div>
       
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
@@ -34,9 +42,11 @@ export function LessonSidebar({
                 const isActive = activeLesson?.id === lesson.id;
                 
                 return (
-                  <button 
+                  <div 
                     key={lesson.id}
-                    onClick={() => onSelectLesson(lesson)}
+                    onClick={() => {
+                      onSelectLesson(lesson);
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -51,26 +61,60 @@ export function LessonSidebar({
                       transition: 'all 0.2s'
                     }}
                     className={!isActive ? 'hover:bg-white/5' : ''}
+                    role="button"
+                    tabIndex={0}
                   >
-                    <span style={{ 
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: '20px', height: '20px', borderRadius: '50%', 
-                      background: status === 'COMPLETED' ? (isActive ? '#fff' : 'var(--brand-500)') : 'rgba(255,255,255,0.1)',
-                      color: status === 'COMPLETED' ? (isActive ? 'var(--brand-600)' : '#fff') : 'transparent',
-                      fontSize: '0.75rem'
-                    }}>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onToggleLessonStatus) onToggleLessonStatus(lesson.id, status);
+                      }}
+                      style={{ 
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '20px', height: '20px', borderRadius: '50%', 
+                        background: status === 'COMPLETED' ? (isActive ? '#fff' : 'var(--brand-500)') : 'rgba(255,255,255,0.1)',
+                        color: status === 'COMPLETED' ? (isActive ? 'var(--brand-600)' : '#fff') : 'transparent',
+                        fontSize: '0.75rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0
+                      }}>
                       {status === 'COMPLETED' && '✓'}
-                    </span>
+                    </button>
                     <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
                       {lesson.title}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
           </div>
         ))}
       </div>
+
+      {enrollment.status === 'COMPLETED' && (
+        <div style={{ padding: '1.5rem', borderTop: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {onClaimCertificate && (
+            <button 
+              onClick={onClaimCertificate} 
+              disabled={claimingCert}
+              className="btn btn-primary"
+              style={{ width: '100%', fontSize: '0.875rem' }}
+            >
+              {claimingCert ? 'Claiming...' : 'Claim Certificate 🎓'}
+            </button>
+          )}
+          {onLeaveReview && (
+            <button 
+              onClick={onLeaveReview}
+              className="btn btn-secondary"
+              style={{ width: '100%', fontSize: '0.875rem' }}
+            >
+              Leave a Review ⭐
+            </button>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

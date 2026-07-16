@@ -11,7 +11,7 @@ export interface Course {
   title: string;
   slug: string;
   description: string;
-  courseType: 'LIVE' | 'RECORDED' | 'HYBRID' | 'INDIVIDUAL';
+  courseType: 'RECORDED' | 'HYBRID';
   categoryId: string;
   teacherId?: string;
   status: 'DRAFT' | 'PENDING_REVIEW' | 'CHANGES_REQUESTED' | 'APPROVED' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
@@ -27,6 +27,7 @@ export interface Course {
   modules?: CourseModule[];
   pricings?: CoursePricing[];
   teacher?: {
+    id: string;
     profile?: {
       firstName: string;
       lastName: string;
@@ -73,7 +74,7 @@ export interface Lesson {
   id: string;
   moduleId: string;
   title: string;
-  lessonType: 'VIDEO' | 'DOCUMENT' | 'LIVE';
+  lessonType: 'VIDEO' | 'DOCUMENT';
   contentUrl?: string | null;
   durationSeconds?: number | null;
   sortOrder: number;

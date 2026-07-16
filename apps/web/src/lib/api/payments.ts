@@ -5,12 +5,13 @@ import { apiFetch } from './client';
 export type PopulatedTransaction = {
   id: string;
   userId: string;
-  courseId: string;
+  courseId?: string;
+  bookingId?: string;
   amount: string;
   currency: string;
   status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
   createdAt: string;
-  course: {
+  course?: {
     id: string;
     title: string;
     coverImageUrl: string | null;
@@ -22,6 +23,13 @@ export const paymentsApi = {
     return apiFetch<{ orderId: string, amount: number, currency: string }>('/payments/orders', {
       method: 'POST',
       body: JSON.stringify({ courseId }),
+    });
+  },
+
+  createBookingOrder: (bookingId: string) => {
+    return apiFetch<{ orderId: string, amount: number, currency: string }>('/payments/orders', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId }),
     });
   },
 

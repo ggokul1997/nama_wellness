@@ -53,6 +53,12 @@ model User {
   certificates               Certificate[]
   notifications              Notification[]
 
+  // Bookings (1-on-1)
+  bookingsAsStudent          IndividualSessionBooking[] @relation("StudentBookings")
+  bookingsAsTeacher          IndividualSessionBooking[] @relation("TeacherBookings")
+  teacherAvailability        TeacherAvailability[]
+  teacherPricing             IndividualSessionPricing[]
+
   // Relations for Sprint G
   chatSessionsAsStudent      ChatSession[]      @relation("ChatStudent")
   chatSessionsAsTeacher      ChatSession[]      @relation("ChatTeacher")
@@ -404,10 +410,8 @@ enum PerformanceStatus {
 }
 
 enum CourseType {
-  LIVE
   RECORDED
   HYBRID
-  INDIVIDUAL
 }
 
 enum CourseStatus {
@@ -423,7 +427,6 @@ enum CourseStatus {
 enum LessonType {
   VIDEO
   DOCUMENT
-  LIVE
 }
 
 enum ApprovalStatus {
@@ -437,6 +440,13 @@ enum EnrollmentStatus {
   SUSPENDED
   COMPLETED
   CANCELLED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }
 
 enum ProgressStatus {
@@ -503,7 +513,8 @@ model Transaction {
   id              String            @id @default(cuid())
   userId          String
   enrollmentId    String?           @unique
-  courseId        String
+  courseId        String?
+  bookingId       String?           @unique
   amount          Decimal           @db.Decimal(12,2)
   currency        String            @default("INR")
   status          TransactionStatus @default(PENDING)
@@ -514,7 +525,8 @@ model Transaction {
 
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   enrollment      Enrollment?       @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course          Course?           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  booking         IndividualSessionBooking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
 }
@@ -672,3 +684,62 @@ model ChatMessage {
 
   @@map("chat_messages")
 }
+
+// =============================================================
+// Sprint H: 1-on-1 Sessions
+// =============================================================
+
+model TeacherAvailability {
+  id              String   @id @default(cuid())
+  teacherId       String
+  dayOfWeek       Int      // 0 = Sunday, 1 = Monday, etc.
+  startTime       String   // e.g. "09:00" in UTC or teacher's local time (assume UTC for consistency)
+  endTime         String   // e.g. "17:00"
+  isAvailable     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  teacher         User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_availability")
+}
+
+model IndividualSessionPricing {
+  id              String   @id @default(cuid())
+  teacherId       String
+  durationMinutes Int      // e.g. 30, 60
+  amount          Decimal  @db.Decimal(12,2)
+  currency        String   @default("INR")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  teacher         User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  bookings        IndividualSessionBooking[]
+
+  @@map("individual_session_pricing")
+}
+
+model IndividualSessionBooking {
+  id              String        @id @default(cuid())
+  studentId       String
+  teacherId       String
+  pricingId       String
+  scheduledAt     DateTime
+  durationMinutes Int
+  status          BookingStatus @default(PENDING_PAYMENT)
+  meetingUrl      String?
+  cancellationReason String?
+  rescheduledFromId String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  student         User          @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher         User          @relation("TeacherBookings", fields: [teacherId], references: [id], onDelete: Cascade)
+  pricing         IndividualSessionPricing @relation(fields: [pricingId], references: [id])
+  transaction     Transaction?
+
+  @@map("individual_session_bookings")
+}
+

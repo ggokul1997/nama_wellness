@@ -130,10 +130,8 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
           <div>
             <label className="label">Course Type</label>
             <select className="input" value={courseType} onChange={e => setCourseType(e.target.value)} required>
-              <option value="RECORDED">Pre-recorded Video</option>
-              <option value="LIVE">Live Interactive Classes</option>
-              <option value="HYBRID">Hybrid (Live + Recorded)</option>
-              <option value="INDIVIDUAL">1-on-1 Individual Sessions</option>
+              <option value="RECORDED">Pre-Recorded Video Course</option>
+              <option value="HYBRID">Hybrid (Pre-Recorded + Live Group Sessions)</option>
             </select>
           </div>
 

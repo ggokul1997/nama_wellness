@@ -26,6 +26,7 @@ export const ROUTES = {
   TEACHER_ONBOARDING: '/teacher/onboarding',
   TEACHER_COURSES: '/teacher/courses',
   TEACHER_AVAILABILITY: '/teacher/availability',
+  TEACHER_PRICING: '/teacher/pricing',
   TEACHER_BOOKINGS: '/teacher/bookings',
   TEACHER_EARNINGS: '/teacher/earnings',
   TEACHER_CHAT: '/teacher/chat',

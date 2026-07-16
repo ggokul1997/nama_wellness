@@ -28,7 +28,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [activeModuleId, setActiveModuleId] = useState<string>('');
   const [lessonTitle, setLessonTitle] = useState('');
-  const [lessonType, setLessonType] = useState<'VIDEO' | 'DOCUMENT' | 'LIVE'>('VIDEO');
+  const [lessonType, setLessonType] = useState<'VIDEO' | 'DOCUMENT'>('VIDEO');
   const [submittingLesson, setSubmittingLesson] = useState(false);
   const [lessonFile, setLessonFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -212,9 +212,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button onClick={() => router.push(`/teacher/courses/${id}/sessions`)} className="btn btn-ghost" style={{ border: '1px solid var(--surface-border)' }}>
-            Live Sessions
-          </button>
+
           <button onClick={() => router.push(`/teacher/courses/${id}/materials`)} className="btn btn-ghost" style={{ border: '1px solid var(--surface-border)' }}>
             Study Materials
           </button>

@@ -211,7 +211,23 @@ export default function LandingPage() {
               >
                 {cat.iconUrl ? (
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-                    <img src={cat.iconUrl} alt={cat.name} style={{ height: '2rem', width: '2rem', objectFit: 'contain' }} />
+                    <img 
+                      src={cat.iconUrl} 
+                      alt={cat.name} 
+                      style={{ height: '2rem', width: '2rem', objectFit: 'contain' }}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          const fallback = document.createElement('div');
+                          fallback.style.fontSize = '2rem';
+                          fallback.style.lineHeight = '1';
+                          fallback.innerText = '✨';
+                          parent.appendChild(fallback);
+                        }
+                      }}
+                    />
                   </div>
                 ) : (
                   <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✨</div>

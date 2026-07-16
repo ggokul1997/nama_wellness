@@ -60,12 +60,23 @@ export default function OrdersPage() {
                   <tr key={tx.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        {tx.course.coverImageUrl ? (
-                          <img src={tx.course.coverImageUrl} alt={tx.course.title} style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                        {tx.course ? (
+                          <>
+                            {tx.course.coverImageUrl ? (
+                              <img src={tx.course.coverImageUrl} alt={tx.course.title} style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                            ) : (
+                              <div style={{ width: '60px', height: '40px', background: 'var(--surface-border)', borderRadius: '4px' }} />
+                            )}
+                            <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{tx.course.title}</span>
+                          </>
+                        ) : tx.bookingId ? (
+                          <>
+                            <div style={{ width: '60px', height: '40px', background: 'var(--brand-500)', opacity: 0.8, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🧑‍🏫</div>
+                            <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>1-on-1 Session</span>
+                          </>
                         ) : (
-                          <div style={{ width: '60px', height: '40px', background: 'var(--surface-border)', borderRadius: '4px' }} />
+                          <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>Unknown Purchase</span>
                         )}
-                        <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{tx.course.title}</span>
                       </div>
                     </td>
                     <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>

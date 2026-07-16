@@ -366,6 +366,17 @@ textarea.input {
   transform: translateY(-1px);
 }
 
+.btn-outline {
+  background: transparent;
+  color: var(--brand-400);
+  border: 1px solid var(--brand-500);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--brand-500);
+  color: #fff;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);

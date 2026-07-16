@@ -9,6 +9,7 @@ interface LessonSidebarProps {
   onToggleLessonStatus?: (lessonId: string, currentStatus: string) => void;
   onClaimCertificate?: () => void;
   onLeaveReview?: () => void;
+  onBookSession?: () => void;
   claimingCert?: boolean;
 }
 
@@ -21,6 +22,7 @@ export function LessonSidebar({
   onToggleLessonStatus,
   onClaimCertificate,
   onLeaveReview,
+  onBookSession,
   claimingCert,
 }: LessonSidebarProps) {
   return (
@@ -28,6 +30,16 @@ export function LessonSidebar({
       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{course.title}</h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Status: {enrollment.status}</p>
+        
+        {onBookSession && (
+          <button 
+            onClick={onBookSession}
+            className="btn btn-outline"
+            style={{ width: '100%', fontSize: '0.875rem', marginTop: '0.5rem' }}
+          >
+            Book 1-on-1 Session 📅
+          </button>
+        )}
       </div>
       
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>

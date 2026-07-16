@@ -4,18 +4,23 @@ import { companiesRepository } from '../companies/companies.repository.js';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { courseId } = req.body;
+    const { courseId, bookingId } = req.body;
     const userId = req.user?.sub; // Assuming user is attached via authenticate middleware
 
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (!courseId) {
-      return res.status(400).json({ error: 'courseId is required' });
+    if (!courseId && !bookingId) {
+      return res.status(400).json({ error: 'courseId or bookingId is required' });
     }
 
-    const order = await paymentsService.createOrder(userId, courseId);
+    let order;
+    if (bookingId) {
+      order = await paymentsService.createBookingOrder(userId, bookingId);
+    } else {
+      order = await paymentsService.createOrder(userId, courseId);
+    }
     return res.status(200).json({ success: true, data: order });
   } catch (error: any) {
     console.error('Error creating order:', error);

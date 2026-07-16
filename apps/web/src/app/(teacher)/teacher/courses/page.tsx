@@ -135,7 +135,7 @@ export default function TeacherCoursesPage() {
                       {course.status}
                     </span>
                     <span className="badge" style={{ background: 'var(--brand-500)', color: 'white' }}>
-                      {course.courseType}
+                      {course.courseType === 'HYBRID' ? 'Hybrid' : 'Pre-Recorded'}
                     </span>
                   </div>
                   <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
@@ -164,9 +164,16 @@ export default function TeacherCoursesPage() {
                     {course.description}
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid var(--surface-border)' }} onClick={(e) => e.stopPropagation()}>
-                    <Link href={`/teacher/courses/${course.id}/curriculum`} className="btn btn-primary" style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}>
-                      Manage Curriculum
-                    </Link>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <Link href={`/teacher/courses/${course.id}/curriculum`} className="btn btn-primary" style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}>
+                        Curriculum
+                      </Link>
+                      {course.courseType === 'HYBRID' && (
+                        <Link href={`/teacher/courses/${course.id}/sessions`} className="btn btn-secondary" style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}>
+                          Sessions
+                        </Link>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <Link href={`/teacher/courses/${course.id}/edit`} className="btn btn-ghost" style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}>
                         Edit

@@ -7,6 +7,7 @@ import type { Course, CourseModule, Lesson } from '@nama/shared';
 import { getErrorMessage } from '@/lib/error';
 import { useAuth } from '@/lib/auth/session';
 import { enrollmentsApi } from '@/lib/api/enrollments';
+import { BookingCalendarModal } from '@/components/bookings/BookingCalendarModal';
 
 export default function PublicCourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -18,6 +19,7 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
   const [error, setError] = useState('');
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
     if (slug) fetchCourse();
@@ -106,7 +108,7 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative', zIndex: 10 }}>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <span className="badge" style={{ background: 'var(--brand-500)', color: 'white', padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-              {course.courseType}
+              {course.courseType === 'HYBRID' ? 'Hybrid' : 'Pre-Recorded'}
             </span>
             {course.category && (
               <span style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 500 }}>
@@ -221,19 +223,39 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
             </div>
             
             {(!user || !user.roles.some(r => r.role === 'ADMIN' || r.role === 'TEACHER')) && (
-              <button 
-                onClick={handleEnroll}
-                className="btn btn-primary" 
-                style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', fontWeight: 600, display: 'flex', justifyContent: 'center' }}
-              >
-                {isEnrolled ? 'Start Learning' : 'Enroll Now'}
-              </button>
-            )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <button 
+                      onClick={handleEnroll}
+                      className="btn btn-primary" 
+                      style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', fontWeight: 600, display: 'flex', justifyContent: 'center' }}
+                    >
+                      {isEnrolled ? 'Start Learning' : 'Enroll Now'}
+                    </button>
+                    
+                    {isEnrolled && course.teacherId && (
+                      <button 
+                        onClick={() => {
+                          if (!user) {
+                            router.push(`/login?redirect=/courses/${slug}`);
+                            return;
+                          }
+                          setShowBookingModal(true);
+                        }}
+                        className="btn btn-outline" 
+                        style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', fontWeight: 600, display: 'flex', justifyContent: 'center' }}
+                      >
+                        Book 1-on-1 with Teacher
+                      </button>
+                    )}
+                  </div>
+                )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '1.5rem', borderTop: '1px solid var(--surface-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 <span>Format</span>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{course.courseType}</span>
+                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                  {course.courseType === 'HYBRID' ? 'Hybrid (Pre-Recorded + Live)' : 'Pre-Recorded Video'}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 <span>Access</span>
@@ -244,6 +266,13 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
         </div>
         
       </div>
+
+      {showBookingModal && course.teacherId && (
+        <BookingCalendarModal 
+          teacherId={course.teacherId} 
+          onClose={() => setShowBookingModal(false)} 
+        />
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { paymentsRepository } from './payments.repository.js';
 import { coursesRepository } from '../courses/courses.repository.js';
 import { companiesRepository } from '../companies/companies.repository.js';
+import { bookingsRepository } from '../bookings/bookings.repository.js';
 
 // Initialize Razorpay (dummy key if not provided)
 const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_dummy';
@@ -54,6 +55,42 @@ export class PaymentsService {
       courseId,
       amount: currentPrice.amount,
       currency: currentPrice.currency,
+      razorpayOrderId: order.id,
+      status: 'PENDING'
+    });
+
+    return { 
+      orderId: order.id, 
+      amount: order.amount, 
+      currency: order.currency 
+    };
+  }
+
+  async createBookingOrder(userId: string, bookingId: string) {
+    const booking = await bookingsRepository.getBookingById(bookingId);
+    if (!booking) throw new Error('Booking not found');
+    if (booking.studentId !== userId) throw new Error('Unauthorized');
+    if (booking.status !== 'PENDING_PAYMENT') throw new Error('Booking is not pending payment');
+
+    const pricing = booking.pricing;
+    const amountInPaise = Math.round(pricing.amount.toNumber() * 100);
+
+    const order = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: pricing.currency,
+      receipt: `booking_${bookingId}`.substring(0, 40),
+      notes: {
+        type: 'BOOKING',
+        userId,
+        bookingId,
+      }
+    });
+
+    await paymentsRepository.createTransaction({
+      userId,
+      bookingId,
+      amount: pricing.amount,
+      currency: pricing.currency,
       razorpayOrderId: order.id,
       status: 'PENDING'
     });
@@ -145,9 +182,10 @@ export class PaymentsService {
     
     // Notes are attached to the order and payment
     const notes = entity.notes;
-    if (!notes || !notes.userId || !notes.courseId) return;
+    if (!notes || !notes.userId) return;
+    if (!notes.courseId && notes.type !== 'BOOKING') return;
 
-    const { userId, courseId } = notes;
+    const { userId, courseId, bookingId } = notes;
 
     const transaction = await paymentsRepository.getTransactionByOrderId(orderId);
 
@@ -173,6 +211,8 @@ export class PaymentsService {
       if (seats > 0) {
         await companiesRepository.purchaseLicense(notes.companyId, courseId, seats);
       }
+    } else if (notes.type === 'BOOKING' && bookingId) {
+      await paymentsRepository.linkBookingToTransaction(transaction.id, bookingId);
     } else {
       // Create Enrollment for B2C
       await paymentsRepository.createEnrollment(userId, courseId, transaction.id);
@@ -214,10 +254,12 @@ export class PaymentsService {
 
     if (notes && notes.type === 'B2B' && notes.companyId && notes.seats) {
       const seats = parseInt(notes.seats, 10);
-      if (seats > 0) {
+      if (seats > 0 && transaction.courseId) {
         await companiesRepository.purchaseLicense(notes.companyId, transaction.courseId, seats);
       }
-    } else {
+    } else if (notes && notes.type === 'BOOKING' && transaction.bookingId) {
+      await paymentsRepository.linkBookingToTransaction(transaction.id, transaction.bookingId);
+    } else if (transaction.courseId) {
       // Create Enrollment
       await paymentsRepository.createEnrollment(transaction.userId, transaction.courseId, transaction.id);
     }
@@ -264,10 +306,13 @@ export class PaymentsService {
         ? `${t.user.profile.firstName} ${t.user.profile.lastName}`.trim() 
         : undefined;
 
+      const courseTitle = t.course?.title || '1-on-1 Session';
+
       return {
         id: t.id,
         courseId: t.courseId,
-        courseTitle: t.course.title,
+        bookingId: t.bookingId,
+        courseTitle,
         amount,
         currency: t.currency,
         teacherCut,

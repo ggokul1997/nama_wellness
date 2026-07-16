@@ -7,9 +7,12 @@ async function main(): Promise<void> {
   console.log('🌱 Starting database seed...');
 
   await seedAdmin();
-  await seedCategories();
 
   console.log('✅ Seed complete.');
+  console.log('');
+  console.log('  Admin credentials:');
+  console.log('  Email:    admin@namawellness.com');
+  console.log('  Password: Admin@123456');
 }
 
 async function seedAdmin(): Promise<void> {
@@ -42,12 +45,7 @@ async function seedAdmin(): Promise<void> {
     },
   });
 
-  console.log(`  ✅ Admin created: ${admin.email} / password: Admin@123456`);
-}
-
-async function seedCategories(): Promise<void> {
-  // Categories model is added in Sprint B.
-  console.log('  ⏭  Categories — deferred to Sprint B');
+  console.log(`  ✅ Admin created: ${admin.email}`);
 }
 
 main()

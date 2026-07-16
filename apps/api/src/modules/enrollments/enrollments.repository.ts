@@ -68,6 +68,9 @@ export const enrollmentsRepository = {
             },
             studyMaterials: {
               where: { approvalStatus: 'APPROVED' }
+            },
+            teacher: {
+              include: { profile: true }
             }
           }
         },

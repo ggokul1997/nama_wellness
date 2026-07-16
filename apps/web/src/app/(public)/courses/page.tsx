@@ -105,7 +105,7 @@ export default function PublicCoursesPage() {
                   <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <span className="badge" style={{ background: 'var(--brand-500)', color: 'white', fontSize: '0.75rem' }}>
-                        {course.courseType}
+                        {course.courseType === 'HYBRID' ? 'Hybrid' : 'Pre-Recorded'}
                       </span>
                       {course.category && (
                         <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>

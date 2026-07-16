@@ -22,7 +22,7 @@ export const liveSessionsRepository = {
   },
 
   async getStudentUpcomingSessions(studentId: string) {
-    // Find all sessions for courses the student is enrolled in, where scheduledAt > now
+    // Find all sessions for courses the student is enrolled in
     const enrollments = await prisma.enrollment.findMany({
       where: { userId: studentId, status: 'ACTIVE' },
       select: { courseId: true },
@@ -32,8 +32,7 @@ export const liveSessionsRepository = {
 
     return prisma.liveSession.findMany({
       where: {
-        courseId: { in: courseIds },
-        scheduledAt: { gte: new Date() },
+        courseId: { in: courseIds }
       },
       orderBy: { scheduledAt: 'asc' },
       include: {
@@ -47,8 +46,7 @@ export const liveSessionsRepository = {
   async getTeacherUpcomingSessions(teacherId: string) {
     return prisma.liveSession.findMany({
       where: {
-        course: { teacherId },
-        scheduledAt: { gte: new Date() },
+        course: { teacherId }
       },
       orderBy: { scheduledAt: 'asc' },
       include: {

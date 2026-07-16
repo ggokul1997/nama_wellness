@@ -7,6 +7,7 @@ import type { Enrollment, Lesson } from '@nama/shared';
 import { engagementApi } from '@/lib/api/engagement';
 import { LessonSidebar } from './_components/LessonSidebar';
 import { LessonContentArea } from './_components/LessonContentArea';
+import { BookingCalendarModal } from '@/components/bookings/BookingCalendarModal';
 
 export default function StudentCourseLearnPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -23,6 +24,7 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [claimingCert, setClaimingCert] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
     fetchCourseProgress(true);
@@ -145,6 +147,7 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
         onToggleLessonStatus={handleToggleLessonStatus}
         onClaimCertificate={handleClaimCertificate}
         onLeaveReview={() => setShowReviewModal(true)}
+        onBookSession={() => setShowBookingModal(true)}
         claimingCert={claimingCert}
       />
 
@@ -188,6 +191,13 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
             </form>
           </div>
         </div>
+      )}
+
+      {showBookingModal && enrollment?.course?.teacher?.id && (
+        <BookingCalendarModal
+          teacherId={enrollment.course.teacher.id}
+          onClose={() => setShowBookingModal(false)}
+        />
       )}
     </div>
   );

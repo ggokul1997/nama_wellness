@@ -4,6 +4,7 @@ import { AuthProvider } from '@/lib/auth/session';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { SocketProvider } from '@/components/providers/SocketProvider';
 import { Navigation } from '@/components/ui/Navigation';
+import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
   title: {
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SocketProvider>
             <ThemeProvider>
               <div className="layout-wrapper">
+                <Toaster position="top-center" />
                 <Navigation />
                 
                 <main className="main-content">
