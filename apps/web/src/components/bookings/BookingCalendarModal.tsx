@@ -213,7 +213,9 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
                     {availableSlots.map(slot => {
                       let isHighlighted = false;
                       if (selectedTime) {
-                        const [sh, sm] = selectedTime.split(':').map(Number);
+                        const parts = selectedTime.split(':').map(Number);
+                        const sh = parts[0] || 0;
+                        const sm = parts[1] || 0;
                         const selectedMins = sh * 60 + sm;
                         const priceOpt = pricing.find(p => p.id === selectedPricingId);
                         const dur = priceOpt ? priceOpt.durationMinutes : 0;

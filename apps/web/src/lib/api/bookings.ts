@@ -10,7 +10,7 @@ import {
 
 // --- Availability ---
 export const getTeacherAvailability = async (teacherId: string) => {
-  return apiFetch<{ availability: TeacherAvailability[] }>(`/bookings/availability/${teacherId}`);
+  return apiFetch<{ availability: TeacherAvailability[], advanceNoticeHours: number }>(`/bookings/availability/${teacherId}`);
 };
 
 export const updateTeacherAvailability = async (input: UpdateAvailabilityInput) => {
