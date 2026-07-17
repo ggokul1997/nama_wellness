@@ -16,7 +16,7 @@ interface CustomSelectProps {
   error?: boolean;
 }
 
-export function CustomSelect({ value, onChange, options, className = '', required, error }: CustomSelectProps) {
+export function CustomSelect({ value, onChange, options, className = '', error }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
