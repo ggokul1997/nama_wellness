@@ -141,7 +141,7 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div className="form-row-2">
         <div>
           <label className="label">Icon (Upload or URL)</label>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>

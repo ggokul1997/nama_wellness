@@ -8,8 +8,10 @@ import { getErrorMessage } from '@/lib/error';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
+import { useDialog } from '@/components/providers/DialogProvider';
 
 export default function StudentBookingsPage() {
+  const dialog = useDialog();
   const [activeTab, setActiveTab] = useState<'GROUP' | 'ONE_ON_ONE'>('GROUP');
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [individualBookings, setIndividualBookings] = useState<IndividualSessionBooking[]>([]);
@@ -36,7 +38,8 @@ export default function StudentBookingsPage() {
   }, []);
 
   const handleCancel = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to cancel this booking?', isDestructive: true, confirmText: 'Cancel' });
+    if (!confirmed) return;
     try {
       await updateBookingStatus(bookingId, 'CANCELLED');
       toast.success('Booking cancelled');
@@ -65,7 +68,7 @@ export default function StudentBookingsPage() {
         <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>View and manage your upcoming live group classes and 1-on-1 sessions.</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
         <button
           onClick={() => setActiveTab('GROUP')}
           style={{
@@ -113,7 +116,7 @@ export default function StudentBookingsPage() {
                   <div style={{ color: 'var(--text-secondary)' }}>You don't have any upcoming live classes scheduled.</div>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                <div className="responsive-grid-3">
                   {upcomingGroupSessions.map((session) => (
                     <div key={session.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div>
@@ -152,7 +155,7 @@ export default function StudentBookingsPage() {
             {pastGroupSessions.length > 0 && (
               <section>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Past Live Classes</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                <div className="responsive-grid-3">
                   {pastGroupSessions.map((session) => (
                     <div key={session.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', opacity: 0.7 }}>
                       <div>
@@ -183,7 +186,7 @@ export default function StudentBookingsPage() {
                 <div style={{ color: 'var(--text-secondary)' }}>You don't have any upcoming 1-on-1 sessions.</div>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
+                <div className="responsive-grid-3" style={{ marginTop: '1rem' }}>
                 {upcomingBookings.map((booking) => (
                   <div key={booking.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
@@ -202,7 +205,7 @@ export default function StudentBookingsPage() {
                       </div>
                     </div>
 
-                    <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       {booking.status === 'PENDING_PAYMENT' && (
                         <Link href={`/checkout/booking/${booking.id}`} className="btn btn-primary flex-1 text-center">
                           Pay Now
@@ -226,29 +229,26 @@ export default function StudentBookingsPage() {
           {pastBookings.length > 0 && (
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>Past 1-on-1s</h3>
-              <div className="glass-card" style={{ overflow: 'hidden' }}>
-                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                  <thead style={{ background: 'var(--surface-active)' }}>
-                    <tr>
-                      <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Date & Time</th>
-                      <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Duration</th>
-                      <th style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pastBookings.map((booking) => (
-                      <tr key={booking.id} style={{ borderTop: '1px solid var(--surface-border)' }}>
-                        <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{format(new Date(booking.scheduledAt), 'PPp')}</td>
-                        <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{booking.durationMinutes} mins</td>
-                        <td style={{ padding: '1rem' }}>
-                          <span style={{ color: booking.status === 'COMPLETED' ? 'var(--brand-500)' : '#ef4444' }}>
-                            {booking.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="responsive-grid-3">
+                {pastBookings.map((booking) => (
+                  <div key={booking.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', opacity: 0.7 }}>
+                    <div>
+                      <span style={{ 
+                        display: 'inline-block', padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 600, borderRadius: '4px', marginBottom: '0.5rem',
+                        background: booking.status === 'COMPLETED' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                        color: booking.status === 'COMPLETED' ? '#22c55e' : '#ef4444'
+                      }}>
+                        {booking.status.replace('_', ' ')}
+                      </span>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {format(new Date(booking.scheduledAt), 'PPp')}
+                      </h3>
+                      <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                        Duration: {booking.durationMinutes} mins
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

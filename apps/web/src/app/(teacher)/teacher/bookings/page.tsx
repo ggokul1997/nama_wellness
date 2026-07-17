@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useDialog } from '@/components/providers/DialogProvider';
 import { useAuth } from '@/lib/auth/session';
 import { getMyBookings, updateBookingStatus } from '@/lib/api/bookings';
 import { engagementApi } from '@/lib/api/engagement';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 
 export default function TeacherBookingsPage() {
   const { user } = useAuth();
+  const dialog = useDialog();
   const [activeTab, setActiveTab] = useState<'GROUP' | 'ONE_ON_ONE'>('GROUP');
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [bookings, setBookings] = useState<IndividualSessionBooking[]>([]);
@@ -73,7 +75,7 @@ export default function TeacherBookingsPage() {
         <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>View and manage your upcoming live group classes and 1-on-1 sessions.</p>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--surface-border)', paddingBottom: '0.5rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
         <button
           onClick={() => setActiveTab('GROUP')}
           style={{
@@ -116,7 +118,7 @@ export default function TeacherBookingsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
             <section>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Upcoming Group Classes</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              <div className="responsive-grid-3">
                 {upcomingGroupSessions.length === 0 ? (
                   <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)', border: '1px dashed var(--surface-border)', borderRadius: 'var(--radius-xl)' }}>
                     You have no upcoming group sessions.
@@ -160,7 +162,7 @@ export default function TeacherBookingsPage() {
             {pastGroupSessions.length > 0 && (
               <section>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Past Group Classes</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                <div className="responsive-grid-3">
                   {pastGroupSessions.map(session => (
                     <div key={session.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', opacity: 0.7 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -186,7 +188,7 @@ export default function TeacherBookingsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
           <section>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Upcoming Sessions</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            <div className="responsive-grid-3">
             {upcomingBookings.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)', border: '1px dashed var(--surface-border)', borderRadius: 'var(--radius-xl)' }}>
                 You have no upcoming sessions.
@@ -219,10 +221,19 @@ export default function TeacherBookingsPage() {
                     </p>
                     
                     {booking.meetingUrl ? (
-                      <div style={{ marginTop: '0.75rem' }}>
+                      <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <a href={booking.meetingUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-500)', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
                           Join Meeting
                         </a>
+                        {booking.status === 'CONFIRMED' && (
+                          <button 
+                            onClick={() => { setEditingBooking(booking); setMeetingUrl(booking.meetingUrl || ''); }}
+                            className="btn btn-ghost"
+                            style={{ padding: '0', height: 'auto', color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}
+                          >
+                            ✎ Edit
+                          </button>
+                        )}
                       </div>
                     ) : booking.status === 'CONFIRMED' ? (
                       <button 
@@ -242,7 +253,11 @@ export default function TeacherBookingsPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1.5rem' }}>
                     {booking.status === 'CONFIRMED' && (
                       <button 
-                        onClick={() => handleUpdateStatus(booking.id, 'COMPLETED')}
+                        onClick={async () => {
+                          const confirmed = await dialog.confirm({ title: 'Confirm Completion', message: 'Are you sure you want to mark this session as completed?', confirmText: 'Mark Completed' });
+                          if (!confirmed) return;
+                          handleUpdateStatus(booking.id, 'COMPLETED');
+                        }}
                         className="btn btn-outline"
                         style={{ flex: 1 }}
                       >
@@ -250,10 +265,10 @@ export default function TeacherBookingsPage() {
                       </button>
                     )}
                     <button 
-                      onClick={() => {
-                        if (confirm('Are you sure you want to cancel this booking?')) {
-                          handleUpdateStatus(booking.id, 'CANCELLED');
-                        }
+                      onClick={async () => {
+                        const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to cancel this booking?', isDestructive: true, confirmText: 'Delete' });
+                        if (!confirmed) return;
+                        handleUpdateStatus(booking.id, 'CANCELLED');
                       }}
                       className="btn btn-danger"
                       style={{ flex: 1 }}
@@ -270,37 +285,33 @@ export default function TeacherBookingsPage() {
         {pastBookings.length > 0 && (
           <section>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Past Sessions</h2>
-            <div className="glass-card" style={{ overflow: 'hidden' }}>
-              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                <thead style={{ background: 'var(--surface-hover)', borderBottom: '1px solid var(--surface-border)' }}>
-                  <tr>
-                    <th style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Date & Time</th>
-                    <th style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Student</th>
-                    <th style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Duration</th>
-                    <th style={{ padding: '1rem 1.5rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pastBookings.map((booking, i) => (
-                    <tr key={booking.id} style={{ borderBottom: i === pastBookings.length - 1 ? 'none' : '1px solid var(--surface-border)' }}>
-                      <td style={{ padding: '1rem 1.5rem', color: 'var(--text-primary)' }}>
+            <div className="responsive-grid-3">
+              {pastBookings.map((booking) => (
+                <div key={booking.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', opacity: 0.7 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <span style={{ 
+                        display: 'inline-block', padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, borderRadius: '999px', marginBottom: '0.75rem',
+                        background: booking.status === 'COMPLETED' ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)',
+                        color: booking.status === 'COMPLETED' ? '#3b82f6' : '#ef4444'
+                      }}>
+                        {booking.status.replace('_', ' ')}
+                      </span>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                         {format(new Date(booking.scheduledAt), 'PPp')}
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)' }}>{booking.studentId}</td>
-                      <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)' }}>{booking.durationMinutes} mins</td>
-                      <td style={{ padding: '1rem 1.5rem' }}>
-                        <span style={{ 
-                          display: 'inline-block', padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, borderRadius: '999px',
-                          background: booking.status === 'COMPLETED' ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)',
-                          color: booking.status === 'COMPLETED' ? '#3b82f6' : '#ef4444'
-                        }}>
-                          {booking.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </h3>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                        Duration: {booking.durationMinutes} mins
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ paddingTop: '1rem', marginTop: 'auto', borderTop: '1px solid var(--surface-border)' }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Student ID:</span> {booking.studentId}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         )}

@@ -15,9 +15,11 @@ interface SidebarProps {
   portalName: string;
   portalIcon: string;
   accentColor?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(--brand-500)' }: SidebarProps) {
+export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(--brand-500)', isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -27,10 +29,11 @@ export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(-
   };
 
   return (
-    <aside className="sidebar">
-      {/* Logo */}
+    <aside className={`sidebar ${isOpen ? 'is-open' : ''}`}>
+      {/* Logo and Mobile Close Button */}
       <div style={{ padding: '0 1.25rem 1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           <div style={{
             width: 36, height: 36, borderRadius: '50%',
             background: 'var(--gradient-brand)',
@@ -45,6 +48,25 @@ export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(-
               {portalIcon} {portalName}
             </div>
           </div>
+        </div>
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="hide-desktop"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              padding: '0.25rem',
+              lineHeight: 1
+            }}
+            aria-label="Close menu"
+          >
+            ×
+          </button>
+        )}
         </div>
       </div>
 
@@ -68,6 +90,7 @@ export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(-
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => onClose?.()}
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.625rem',
                 padding: '0.625rem 0.875rem',

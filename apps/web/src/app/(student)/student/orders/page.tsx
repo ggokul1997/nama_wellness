@@ -35,7 +35,7 @@ export default function OrdersPage() {
         <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>View and manage your course purchases.</p>
       </div>
 
-      <div className="glass-card" style={{ padding: '2rem' }}>
+      <div className="glass-card">
         {transactions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🛍️</div>
@@ -45,60 +45,107 @@ export default function OrdersPage() {
             </Link>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--surface-border)' }}>
-                  <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Course</th>
-                  <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Date</th>
-                  <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Amount</th>
-                  <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map(tx => (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
-                    <td style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        {tx.course ? (
-                          <>
-                            {tx.course.coverImageUrl ? (
-                              <img src={tx.course.coverImageUrl} alt={tx.course.title} style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
-                            ) : (
-                              <div style={{ width: '60px', height: '40px', background: 'var(--surface-border)', borderRadius: '4px' }} />
-                            )}
-                            <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{tx.course.title}</span>
-                          </>
-                        ) : tx.bookingId ? (
-                          <>
-                            <div style={{ width: '60px', height: '40px', background: 'var(--brand-500)', opacity: 0.8, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🧑‍🏫</div>
-                            <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>1-on-1 Session</span>
-                          </>
-                        ) : (
-                          <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>Unknown Purchase</span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
-                      {new Date(tx.createdAt).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {tx.currency} {tx.amount.toString()}
-                    </td>
-                    <td style={{ padding: '1rem' }}>
-                      <span className="badge" style={{ 
-                        background: tx.status === 'SUCCESS' ? 'rgba(52,211,153,0.1)' : tx.status === 'PENDING' ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)',
-                        color: tx.status === 'SUCCESS' ? 'var(--success)' : tx.status === 'PENDING' ? 'var(--warning)' : 'var(--error)',
-                        border: `1px solid ${tx.status === 'SUCCESS' ? 'rgba(52,211,153,0.2)' : tx.status === 'PENDING' ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)'}`
-                      }}>
-                        {tx.status}
-                      </span>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="table-responsive hide-mobile" style={{ padding: '2rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Course</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Date</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Amount</th>
+                    <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {transactions.map(tx => (
+                    <tr key={tx.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          {tx.course ? (
+                            <>
+                              {tx.course.coverImageUrl ? (
+                                <img src={tx.course.coverImageUrl} alt={tx.course.title} style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                              ) : (
+                                <div style={{ width: '60px', height: '40px', background: 'var(--surface-border)', borderRadius: '4px' }} />
+                              )}
+                              <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{tx.course.title}</span>
+                            </>
+                          ) : tx.bookingId ? (
+                            <>
+                              <div style={{ width: '60px', height: '40px', background: 'var(--brand-500)', opacity: 0.8, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🧑‍🏫</div>
+                              <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>1-on-1 Session</span>
+                            </>
+                          ) : (
+                            <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>Unknown Purchase</span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                        {new Date(tx.createdAt).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {tx.currency} {tx.amount.toString()}
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <span className="badge" style={{ 
+                          background: tx.status === 'SUCCESS' ? 'rgba(52,211,153,0.1)' : tx.status === 'PENDING' ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)',
+                          color: tx.status === 'SUCCESS' ? 'var(--success)' : tx.status === 'PENDING' ? 'var(--warning)' : 'var(--error)',
+                          border: `1px solid ${tx.status === 'SUCCESS' ? 'rgba(52,211,153,0.2)' : tx.status === 'PENDING' ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)'}`
+                        }}>
+                          {tx.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="hide-desktop" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem' }}>
+              {transactions.map(tx => (
+                <div key={tx.id} style={{ padding: '1rem', border: '1px solid var(--surface-border)', borderRadius: '12px', background: 'var(--surface-raised)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{new Date(tx.createdAt).toLocaleDateString()}</span>
+                    <span className="badge" style={{ 
+                      background: tx.status === 'SUCCESS' ? 'rgba(52,211,153,0.1)' : tx.status === 'PENDING' ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)',
+                      color: tx.status === 'SUCCESS' ? 'var(--success)' : tx.status === 'PENDING' ? 'var(--warning)' : 'var(--error)',
+                      border: `1px solid ${tx.status === 'SUCCESS' ? 'rgba(52,211,153,0.2)' : tx.status === 'PENDING' ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                      fontSize: '0.75rem'
+                    }}>
+                      {tx.status}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                    {tx.course ? (
+                      <>
+                        {tx.course.coverImageUrl ? (
+                          <img src={tx.course.coverImageUrl} alt={tx.course.title} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
+                        ) : (
+                          <div style={{ width: '48px', height: '48px', background: 'var(--surface-border)', borderRadius: '8px' }} />
+                        )}
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{tx.course.title}</span>
+                      </>
+                    ) : tx.bookingId ? (
+                      <>
+                        <div style={{ width: '48px', height: '48px', background: 'var(--brand-500)', opacity: 0.8, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🧑‍🏫</div>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>1-on-1 Session</span>
+                      </>
+                    ) : (
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Unknown Purchase</span>
+                    )}
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--surface-border)', paddingTop: '1rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Amount</span>
+                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{tx.currency} {tx.amount.toString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

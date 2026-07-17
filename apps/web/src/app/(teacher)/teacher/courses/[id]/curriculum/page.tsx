@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { useDialog } from '@/components/providers/DialogProvider';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course, CourseModule, Lesson } from '@nama/shared';
 import Link from 'next/link';
@@ -10,6 +11,7 @@ import { getErrorMessage } from '@/lib/error';
 export default function CurriculumBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const dialog = useDialog();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
@@ -32,6 +34,8 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
   const [submittingLesson, setSubmittingLesson] = useState(false);
   const [lessonFile, setLessonFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [moduleErrors, setModuleErrors] = useState<{title?: string}>({});
+  const [lessonErrors, setLessonErrors] = useState<{title?: string}>({});
 
   useEffect(() => {
     fetchData();
@@ -56,6 +60,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
     setEditingModule(null);
     setModuleTitle('');
     setModuleDesc('');
+    setModuleErrors({});
     setShowModuleModal(true);
   };
 
@@ -63,12 +68,17 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
     setEditingModule(m);
     setModuleTitle(m.title);
     setModuleDesc(m.description || '');
+    setModuleErrors({});
     setShowModuleModal(true);
   };
 
   const handleSaveModule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!moduleTitle.trim()) return;
+    setModuleErrors({});
+    if (moduleTitle.trim().length < 3) {
+      setModuleErrors({ title: 'Module title must be at least 3 characters.' });
+      return;
+    }
 
     setSubmittingModule(true);
     try {
@@ -87,19 +97,20 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
       setShowModuleModal(false);
       fetchData();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to save module'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to save module') });
     } finally {
       setSubmittingModule(false);
     }
   };
 
   const handleDeleteModule = async (moduleId: string) => {
-    if (!confirm('Are you sure you want to delete this module and all its lessons?')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to delete this module and all its lessons?', isDestructive: true, confirmText: 'Delete' });
+    if (!confirmed) return;
     try {
       await coursesApi.deleteModule(id, moduleId);
       fetchData();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to delete module'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to delete module') });
     }
   };
 
@@ -109,6 +120,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
     setLessonTitle('');
     setLessonType('VIDEO');
     setLessonFile(null);
+    setLessonErrors({});
     setShowLessonModal(true);
   };
 
@@ -118,12 +130,17 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
     setLessonTitle(l.title);
     setLessonType(l.lessonType);
     setLessonFile(null);
+    setLessonErrors({});
     setShowLessonModal(true);
   };
 
   const handleSaveLesson = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!lessonTitle.trim()) return;
+    setLessonErrors({});
+    if (lessonTitle.trim().length < 3) {
+      setLessonErrors({ title: 'Lesson title must be at least 3 characters.' });
+      return;
+    }
 
     setSubmittingLesson(true);
     try {
@@ -176,7 +193,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
       setUploadProgress(0);
       fetchData();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to save lesson'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to save lesson') });
       setUploadProgress(0);
     } finally {
       setSubmittingLesson(false);
@@ -184,12 +201,13 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
   };
 
   const handleDeleteLesson = async (moduleId: string, lessonId: string) => {
-    if (!confirm('Are you sure you want to delete this lesson?')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to delete this lesson?', isDestructive: true, confirmText: 'Delete' });
+    if (!confirmed) return;
     try {
       await coursesApi.deleteLesson(id, moduleId, lessonId);
       fetchData();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to delete lesson'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to delete lesson') });
     }
   };
 
@@ -204,7 +222,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
         </Link>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>Curriculum Builder</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -229,12 +247,14 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {modules.map((module, index) => (
+          {[...modules].reverse().map((module, index) => {
+            const displayIndex = modules.length - index;
+            return (
             <div key={module.id} className="glass-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--brand-500)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Module {index + 1}: {module.title}
+                    Module {displayIndex}: {module.title}
                   </h3>
                   {module.description && <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{module.description}</p>}
                 </div>
@@ -249,7 +269,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>No lessons in this module yet.</p>
                 ) : (
                   module.lessons.map((lesson, lIndex) => (
-                    <div key={lesson.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--surface-border)' }}>
+                    <div key={lesson.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--surface-border)', flexWrap: 'wrap', gap: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{index + 1}.{lIndex + 1}</span>
                         <div>
@@ -279,7 +299,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
@@ -294,14 +314,15 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
       {/* Module Modal */}
       {showModuleModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', background: 'var(--surface-base)' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
               {editingModule ? 'Edit Module' : 'Create Module'}
             </h2>
-            <form onSubmit={handleSaveModule} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form noValidate onSubmit={handleSaveModule} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label className="label">Module Title</label>
-                <input type="text" className="input" value={moduleTitle} onChange={e => setModuleTitle(e.target.value)} required minLength={3} placeholder="E.g. Introduction to Yoga" />
+                <input type="text" className="input" value={moduleTitle} onChange={e => { setModuleTitle(e.target.value); setModuleErrors({}); }} required minLength={3} placeholder="E.g. Introduction to Yoga" style={moduleErrors.title ? { border: '1px solid var(--error)' } : undefined} />
+                {moduleErrors.title && <div style={{ color: 'var(--error)', fontSize: '0.75rem', marginTop: '0.35rem' }}>{moduleErrors.title}</div>}
               </div>
               <div>
                 <label className="label">Description (Optional)</label>
@@ -319,14 +340,15 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
       {/* Lesson Modal */}
       {showLessonModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', background: 'var(--surface-base)' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
               {editingLesson ? 'Edit Lesson' : 'Add Lesson'}
             </h2>
-            <form onSubmit={handleSaveLesson} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form noValidate onSubmit={handleSaveLesson} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label className="label">Lesson Title</label>
-                <input type="text" className="input" value={lessonTitle} onChange={e => setLessonTitle(e.target.value)} required minLength={3} placeholder="E.g. Breathing Techniques" />
+                <input type="text" className="input" value={lessonTitle} onChange={e => { setLessonTitle(e.target.value); setLessonErrors({}); }} required minLength={3} placeholder="E.g. Breathing Techniques" style={lessonErrors.title ? { border: '1px solid var(--error)' } : undefined} />
+                {lessonErrors.title && <div style={{ color: 'var(--error)', fontSize: '0.75rem', marginTop: '0.35rem' }}>{lessonErrors.title}</div>}
               </div>
               <div>
                 <label className="label">Lesson Type</label>

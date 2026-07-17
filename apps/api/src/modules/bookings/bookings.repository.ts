@@ -5,10 +5,19 @@ import { UpdateAvailabilityInput, IndividualPricingInput } from '@nama/shared';
 export class BookingsRepository {
   // --- Availability ---
   async getTeacherAvailability(teacherId: string) {
-    return prisma.teacherAvailability.findMany({
+    const availability = await prisma.teacherAvailability.findMany({
       where: { teacherId },
       orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
     });
+    
+    const profile = await prisma.teacherProfile.findUnique({
+      where: { userId: teacherId }
+    });
+    
+    return {
+      availability,
+      advanceNoticeHours: profile?.advanceNoticeHours ?? 24
+    };
   }
 
   async setTeacherAvailability(teacherId: string, data: UpdateAvailabilityInput) {
@@ -27,7 +36,27 @@ export class BookingsRepository {
           }))
         });
       }
-      return this.getTeacherAvailability(teacherId);
+      if (data.advanceNoticeHours !== undefined) {
+        await tx.teacherProfile.upsert({
+          where: { userId: teacherId },
+          update: { advanceNoticeHours: data.advanceNoticeHours },
+          create: { userId: teacherId, advanceNoticeHours: data.advanceNoticeHours }
+        });
+      }
+      
+      const availability = await tx.teacherAvailability.findMany({
+        where: { teacherId },
+        orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+      });
+      
+      const profile = await tx.teacherProfile.findUnique({
+        where: { userId: teacherId }
+      });
+      
+      return {
+        availability,
+        advanceNoticeHours: profile?.advanceNoticeHours ?? 24
+      };
     });
   }
 

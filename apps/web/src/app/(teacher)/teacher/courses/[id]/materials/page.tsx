@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, use } from 'react';
+import { useDialog } from '@/components/providers/DialogProvider';
 import { useRouter } from 'next/navigation';
 import { studyMaterialsApi } from '@/lib/api/study-materials';
 import type { StudyMaterial } from '@nama/shared';
@@ -9,6 +10,7 @@ import { getErrorMessage } from '@/lib/error';
 export default function StudyMaterialsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params as Promise<{ id: string }>);
   const router = useRouter();
+  const dialog = useDialog();
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,13 +40,13 @@ export default function StudyMaterialsPage({ params }: { params: Promise<{ id: s
     if (!file) return;
     
     if (!title.trim()) {
-      alert('Please enter a title for the material first.');
+      await dialog.alert({ title: 'Notification', message: 'Please enter a title for the material first.' });
       e.target.value = '';
       return;
     }
 
     if (file.size > 50 * 1024 * 1024) {
-      alert('File size exceeds 50MB limit');
+      await dialog.alert({ title: 'Notification', message: 'File size exceeds 50MB limit' });
       e.target.value = '';
       return;
     }

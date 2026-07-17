@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { studyMaterialsApi } from '@/lib/api/study-materials';
 import type { StudyMaterial } from '@nama/shared';
 import { getErrorMessage } from '@/lib/error';
+import { useDialog } from '@/components/providers/DialogProvider';
 
 // Extend the base type to include relations that our API returns for pending materials
 type PendingMaterial = StudyMaterial & {
@@ -16,6 +17,7 @@ export default function AdminStudyMaterialsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
+  const dialog = useDialog();
 
   useEffect(() => {
     fetchPending();
@@ -38,7 +40,7 @@ export default function AdminStudyMaterialsPage() {
       await studyMaterialsApi.review(id, { status });
       await fetchPending();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to review material'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to review material') });
     } finally {
       setProcessing(null);
     }
@@ -49,14 +51,14 @@ export default function AdminStudyMaterialsPage() {
       const res = await studyMaterialsApi.getDownloadUrl(id);
       window.open(res.data!.url, '_blank');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to get download link'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to get download link') });
     }
   };
 
   if (loading) return <div>Loading pending materials...</div>;
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="page-content" style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Study Materials Review</h1>
         <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Review and approve supplemental materials uploaded by teachers.</p>
@@ -64,7 +66,7 @@ export default function AdminStudyMaterialsPage() {
 
       {error && <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
-      <div className="glass-card" style={{ padding: '1rem' }}>
+      <div className="glass-card table-responsive" style={{ padding: '1rem' }}>
         {materials.length === 0 ? (
           <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '3rem' }}>
             🎉 No pending study materials to review!

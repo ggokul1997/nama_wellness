@@ -17,6 +17,7 @@ export default function TeacherAvailabilityPage() {
 
   // We'll manage a local state of slots to edit easily
   const [slots, setSlots] = useState<{ dayOfWeek: number; startTime: string; endTime: string; isAvailable: boolean }[]>([]);
+  const [advanceNoticeHours, setAdvanceNoticeHours] = useState<number | ''>(24);
 
   useEffect(() => {
     if (user?.id) {
@@ -31,6 +32,7 @@ export default function TeacherAvailabilityPage() {
       
       // Initialize slots, ensuring all 7 days have at least one entry
       const apiSlots = res.data?.availability || [];
+      setAdvanceNoticeHours(res.data?.advanceNoticeHours ?? 24);
       const initialSlots = DAYS_OF_WEEK.map((_, index) => {
         const existing = apiSlots.find(s => s.dayOfWeek === index);
         if (existing) {
@@ -51,7 +53,8 @@ export default function TeacherAvailabilityPage() {
     try {
       setIsSaving(true);
       // Only send available slots or all slots? API accepts an array, we'll send all so teacher can toggle
-      await updateTeacherAvailability({ slots });
+      const finalNoticeHours = advanceNoticeHours === '' ? 0 : advanceNoticeHours;
+      await updateTeacherAvailability({ slots, advanceNoticeHours: finalNoticeHours });
       toast.success('Availability updated successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save availability');
@@ -82,14 +85,34 @@ export default function TeacherAvailabilityPage() {
         </p>
       </div>
 
+      <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Booking Preferences</h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem' }}>
+          <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Advance Notice Required (Hours):</label>
+          <input 
+            type="number" 
+            min="0" 
+            max="168" 
+            value={advanceNoticeHours} 
+            onChange={(e) => {
+              const val = e.target.value;
+              setAdvanceNoticeHours(val === '' ? '' : parseInt(val));
+            }}
+            className="input"
+            style={{ width: '120px' }}
+          />
+          <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>How much lead time you need before a session.</span>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {DAYS_OF_WEEK.map((day, index) => {
           const slot = slots.find(s => s.dayOfWeek === index);
           if (!slot) return null;
 
           return (
-            <div key={index} className="glass-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '25%' }}>
+            <div key={index} className="glass-card availability-card">
+              <div className="availability-day">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
                   <input 
                     type="checkbox" 
@@ -103,8 +126,8 @@ export default function TeacherAvailabilityPage() {
                 </label>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1, justifyContent: 'flex-end', opacity: slot.isAvailable ? 1 : 0.4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="availability-times" style={{ opacity: slot.isAvailable ? 1 : 0.4 }}>
+                <div className="availability-time-block">
                   <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>From</span>
                   <input 
                     type="time" 
@@ -116,7 +139,7 @@ export default function TeacherAvailabilityPage() {
                     step={1800}
                   />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="availability-time-block">
                   <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>To</span>
                   <input 
                     type="time" 

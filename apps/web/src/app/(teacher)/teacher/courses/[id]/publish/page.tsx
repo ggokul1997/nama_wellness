@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { useDialog } from '@/components/providers/DialogProvider';
 import { useRouter } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import type { Course, CoursePricing } from '@nama/shared';
@@ -10,6 +11,7 @@ import { getErrorMessage } from '@/lib/error';
 export default function PublishCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
+  const dialog = useDialog();
 
   const [course, setCourse] = useState<(Course & { pricings?: CoursePricing[] }) | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,18 +48,19 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
     setSaving(true);
     try {
       await coursesApi.proposePricing(id, { amount: Number(price), currency });
-      alert('Pricing proposed successfully!');
+      await dialog.alert({ title: 'Notification', message: 'Pricing proposed successfully!' });
       setEditingPrice(false);
       fetchCourse(); // Refresh course to get the new pricing
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to propose pricing'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to propose pricing') });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeletePrice = async () => {
-    if (!confirm('Are you sure you want to delete the proposed price?')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to delete the proposed price?', isDestructive: true, confirmText: 'Delete' });
+    if (!confirmed) return;
     setDeletingPrice(true);
     try {
       await coursesApi.deletePricing(id);
@@ -65,23 +68,24 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
       setEditingPrice(false);
       fetchCourse(); // Refresh course
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to delete pricing'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to delete pricing') });
     } finally {
       setDeletingPrice(false);
     }
   };
 
   const handleSubmitReview = async () => {
-    if (!confirm('Are you sure you want to submit this course for review? You will not be able to edit it while it is under review.')) {
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to submit this course for review? You will not be able to edit it while it is under review.' });
+    if (!confirmed) {
       return;
     }
     setSubmitting(true);
     try {
       await coursesApi.submitForReview(id);
-      alert('Course submitted for review!');
+      await dialog.alert({ title: 'Notification', message: 'Course submitted for review!' });
       router.push('/teacher/courses');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to submit course for review. Did you propose a price first?'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to submit course for review. Did you propose a price first?') });
     } finally {
       setSubmitting(false);
     }
@@ -107,16 +111,21 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <Link href={`/teacher/courses/${id}/curriculum`} className="btn btn-ghost">← Back to Curriculum</Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+        <Link href={`/teacher/courses/${id}/curriculum`} className="btn btn-ghost">← Back</Link>
         <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>Publish Course</h1>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            🚀 Publish Course
+          </h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{course.title}</p>
         </div>
       </div>
 
       <div className="glass-card" style={{ padding: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>1. Set Course Pricing</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(139, 92, 246, 0.1)', color: 'var(--brand-400)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>1</div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Set Course Pricing</h2>
+        </div>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
           Propose a price for your course. Our admins will review and finalize the pricing before publishing.
         </p>
@@ -127,9 +136,12 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
             justifyContent: 'space-between', 
             alignItems: 'center', 
             padding: '1.5rem', 
-            background: 'rgba(52, 211, 153, 0.05)', 
-            border: '1px solid rgba(52, 211, 153, 0.2)', 
-            borderRadius: 'var(--radius-lg)' 
+            background: 'linear-gradient(145deg, rgba(52, 211, 153, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)', 
+            border: '1px solid rgba(52, 211, 153, 0.3)', 
+            borderRadius: 'var(--radius-lg)',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            boxShadow: '0 4px 20px rgba(52, 211, 153, 0.05)'
           }}>
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Saved Price</p>
@@ -174,7 +186,7 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <select 
                   className="input" 
-                  style={{ width: '120px', fontSize: '1.1rem', padding: '0.75rem' }}
+                  style={{ width: '80px', fontSize: '0.7rem', padding: '0.75rem' }}
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                   disabled={course.status !== 'DRAFT' && course.status !== 'CHANGES_REQUESTED'}
@@ -219,10 +231,19 @@ export default function PublishCoursePage({ params }: { params: Promise<{ id: st
       </div>
 
       <div className="glass-card" style={{ padding: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>2. Submit for Review</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(139, 92, 246, 0.1)', color: 'var(--brand-400)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>2</div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Submit for Review</h2>
+        </div>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
           Once you have added all your modules, lessons, and proposed a price, you can submit your course for admin review.
         </p>
+        <div className="alert alert-warning" style={{ display: 'flex', gap: '0.75rem', padding: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ fontSize: '1.25rem' }}>⚠️</div>
+          <div>
+            <strong>Action cannot be undone:</strong> You will not be able to edit the course curriculum or pricing while it is under review.
+          </div>
+        </div>
 
         <div style={{ padding: '1rem', background: 'var(--surface-hover)', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
           <strong>Current Status:</strong> <span className={`badge ${getStatusBadgeClass(course.status)}`}>{course.status}</span>

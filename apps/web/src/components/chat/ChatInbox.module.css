@@ -395,21 +395,52 @@
 /* =============================================================
    RESPONSIVENESS (Mobile Layout)
    ============================================================= */
+.mobileBackButton {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--brand-500);
+  font-size: 24px;
+  margin-right: 12px;
+  padding: 4px 8px 4px 0;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (max-width: 768px) {
   .container {
-    flex-direction: column;
-    height: calc(100vh - 180px);
-    margin: 8px 0;
+    flex-direction: row;
+    height: calc(100dvh - 200px); /* Account for header, bottom nav, and page padding */
+    margin: 0;
     border-radius: 8px;
+    width: 100%;
   }
   
   .sidebar {
     width: 100%;
     max-width: 100%;
-    min-width: unset;
-    flex: 0 0 35%; /* Take up 35% of height */
+    min-width: 100%;
+    flex: 1 0 100%;
     border-right: none;
-    border-bottom: 1px solid var(--surface-border);
+    border-bottom: none;
+  }
+  
+  .mainArea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    flex: 1 0 100%;
+    border-left: none;
+    display: none;
+  }
+
+  .container.sessionActive .sidebar {
+    display: none;
+  }
+
+  .container.sessionActive .mainArea {
+    display: flex;
   }
   
   .sidebarHeader {
@@ -421,15 +452,17 @@
     font-size: 18px;
   }
   
-  .mainArea {
-    flex: 1;
-    border-left: none;
-  }
-  
   .chatHeader {
     min-height: 60px;
     padding: 10px 16px;
     border-left: none;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .chatHeaderInfo {
+    display: flex;
+    flex-direction: column;
   }
   
   .messagesArea {
@@ -443,5 +476,9 @@
   .inputArea {
     padding: 10px;
     border-left: none;
+  }
+
+  .mobileBackButton {
+    display: flex;
   }
 }

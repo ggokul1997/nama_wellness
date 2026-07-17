@@ -1,6 +1,12 @@
 import { QueryProvider } from '@/providers/QueryProvider';
+import { Navigation } from '@/components/ui/Navigation';
 
-// Public layout — no sidebar, just the page content
+// Public layout
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  return <QueryProvider>{children}</QueryProvider>;
+  return (
+    <QueryProvider>
+      <Navigation />
+      {children}
+    </QueryProvider>
+  );
 }

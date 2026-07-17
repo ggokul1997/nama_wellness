@@ -46,7 +46,7 @@ export default function LandingPage() {
 
 
       {/* Hero */}
-      <section style={{ padding: '6rem 1.5rem 4rem', textAlign: 'center', position: 'relative' }}>
+      <section className="hero-section" style={{ textAlign: 'center', position: 'relative' }}>
         <div style={{
           position: 'absolute', inset: 0,
           background: 'var(--gradient-hero)', pointerEvents: 'none',
@@ -161,10 +161,9 @@ export default function LandingPage() {
 
       {/* Stats */}
       <section style={{ padding: '3rem 1.5rem', borderTop: '1px solid var(--surface-border)', borderBottom: '1px solid var(--surface-border)' }}>
-        <div style={{
+        <div className="responsive-grid-4" style={{
           maxWidth: 1280, margin: '0 auto',
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '2rem', textAlign: 'center',
+          textAlign: 'center',
         }}>
           {STATS.map((s) => (
             <div key={s.label}>

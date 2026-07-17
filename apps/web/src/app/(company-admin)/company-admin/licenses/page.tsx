@@ -68,7 +68,7 @@ export default function CompanyLicensesPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {licenses.map(license => (
               <div key={license.id} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem',
                 padding: '1.5rem', background: 'var(--surface-hover)', borderRadius: '0.5rem',
                 border: '1px solid var(--surface-border)'
               }}>
@@ -114,7 +114,7 @@ export default function CompanyLicensesPage() {
         {availableCourses.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>No courses available for purchase right now.</p>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="responsive-grid-3">
             {availableCourses.map(course => (
               <div key={course.id} style={{ display: 'flex', flexDirection: 'column', background: 'var(--surface-hover)', borderRadius: '0.75rem', border: '1px solid var(--surface-border)', overflow: 'hidden' }}>
                 <div style={{ height: 160, background: 'var(--surface-active)', position: 'relative' }}>

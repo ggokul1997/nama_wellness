@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth/session';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { SocketProvider } from '@/components/providers/SocketProvider';
-import { Navigation } from '@/components/ui/Navigation';
+import { DialogProvider } from '@/components/providers/DialogProvider';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
@@ -27,14 +28,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <SocketProvider>
             <ThemeProvider>
-              <div className="layout-wrapper">
+              <DialogProvider>
+                <div className="layout-wrapper">
                 <Toaster position="top-center" />
-                <Navigation />
-                
                 <main className="main-content">
                   {children}
                 </main>
-              </div>
+                </div>
+              </DialogProvider>
             </ThemeProvider>
           </SocketProvider>
         </AuthProvider>

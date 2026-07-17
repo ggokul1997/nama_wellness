@@ -152,7 +152,7 @@ export default function BookingCheckoutPage({ params }: { params: Promise<{ book
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', padding: '1.5rem', background: 'var(--surface-active)', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem', padding: '1.5rem', background: 'var(--surface-active)', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
             <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>Total Due</span>
             <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--brand-500)' }}>
               {isFree ? 'Free' : `₹${priceAmount}`}

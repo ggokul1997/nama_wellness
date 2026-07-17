@@ -38,7 +38,7 @@ export default function PublicCoursesPage() {
     : courses.filter(c => c.categoryId === selectedCategory);
 
   return (
-    <div style={{ minHeight: '100vh', padding: '4rem 2rem' }}>
+    <div className="page-content" style={{ minHeight: '100vh' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Hero Section */}
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
@@ -84,7 +84,7 @@ export default function PublicCoursesPage() {
             <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>We couldn't find any courses in this category right now.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: '2rem' }}>
             {filteredCourses.map(course => (
               <Link href={`/courses/${course.slug}`} key={course.id} style={{ textDecoration: 'none' }}>
                 <div className="glass-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', cursor: 'pointer', transition: 'transform var(--transition-normal), box-shadow var(--transition-normal)' }}

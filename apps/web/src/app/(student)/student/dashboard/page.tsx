@@ -21,7 +21,7 @@ export default function StudentDashboardPage() {
   if (loading) return <div>Loading your courses...</div>;
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem' }}>
+    <div className="page-content">
       <h1 style={{ fontSize: '2rem', fontWeight: 600, marginBottom: '2rem' }}>My Learning Dashboard</h1>
       
       {error && <div className="alert alert-error" style={{ marginBottom: '2rem' }}>{error}</div>}
@@ -36,7 +36,7 @@ export default function StudentDashboardPage() {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        <div className="responsive-grid-3">
           {courses.map(({ enrollment, overallProgressPercent, completedLessons, totalLessons }) => {
             const course = enrollment.course!;
             return (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { useDialog } from '@/components/providers/DialogProvider';
 import Link from 'next/link';
 import { engagementApi } from '@/lib/api/engagement';
 import { coursesApi } from '@/lib/api/courses';
@@ -10,6 +11,7 @@ import { format } from 'date-fns';
 
 export default function TeacherCourseSessionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const dialog = useDialog();
   const [course, setCourse] = useState<Course | null>(null);
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,12 +90,13 @@ export default function TeacherCourseSessionsPage({ params }: { params: Promise<
   };
 
   const handleDelete = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to delete this session?')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to delete this session?', isDestructive: true, confirmText: 'Delete' });
+    if (!confirmed) return;
     try {
       await engagementApi.deleteSession(sessionId);
       await fetchSessions();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to delete session'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to delete session') });
     }
   };
 

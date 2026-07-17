@@ -14,6 +14,7 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
   const router = useRouter();
   
   const [availability, setAvailability] = useState<TeacherAvailability[]>([]);
+  const [advanceNoticeHours, setAdvanceNoticeHours] = useState<number>(24);
   const [pricing, setPricing] = useState<IndividualSessionPricing[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -30,6 +31,7 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
           getTeacherPricing(teacherId)
         ]);
         setAvailability(availRes.data?.availability || []);
+        setAdvanceNoticeHours(availRes.data?.advanceNoticeHours ?? 24);
         
         const activePricing = (priceRes.data?.pricing || []).filter(p => p.isActive);
         setPricing(activePricing);
@@ -46,11 +48,11 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
     fetchInfo();
   }, [teacherId, onClose]);
 
-  // Generate available time slots for the selected date
-  const getAvailableSlots = () => {
-    if (!selectedDate || !selectedPricingId) return [];
+  // Generate available time slots for a given date
+  const getAvailableSlotsForDate = (dateStr: string) => {
+    if (!dateStr || !selectedPricingId) return [];
     
-    const dateObj = new Date(selectedDate);
+    const dateObj = new Date(dateStr);
     const dayOfWeek = dateObj.getDay();
     const dayAvail = availability.find(a => a.dayOfWeek === dayOfWeek && a.isAvailable);
     
@@ -74,23 +76,27 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
     }
     
     const slots = [];
-    const minTimeMs = Date.now() + 24 * 60 * 60 * 1000;
+    const minTimeMs = Date.now() + advanceNoticeHours * 60 * 60 * 1000;
 
-    for (let current = alignedStart; current + duration <= endMinutes; current += 30) {
+    for (let current = alignedStart; current <= endMinutes; current += 30) {
       const h = Math.floor(current / 60);
       const m = current % 60;
       
-      const slotTimeMs = new Date(`${selectedDate}T${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:00`).getTime();
+      const slotTimeMs = new Date(`${dateStr}T${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:00`).getTime();
       
       if (slotTimeMs >= minTimeMs) {
-        slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+        slots.push({
+          time: `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`,
+          minutes: current,
+          isValidStart: current + duration <= endMinutes
+        });
       }
     }
     
     return slots;
   };
 
-  const availableSlots = getAvailableSlots();
+  const availableSlots = getAvailableSlotsForDate(selectedDate);
 
   const handleBook = async () => {
     if (!selectedDate || !selectedTime || !selectedPricingId) {
@@ -124,8 +130,8 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
 
   if (loading) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-        <div className="glass-card" style={{ maxWidth: '500px', width: '100%', padding: '2rem', textAlign: 'center' }}>
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div className="glass-card" style={{ maxWidth: '500px', width: '100%', padding: '2rem', textAlign: 'center', background: 'var(--surface-bg)' }}>
           <p style={{ color: 'var(--text-muted)' }}>Loading availability...</p>
         </div>
       </div>
@@ -133,8 +139,8 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div className="glass-card" style={{ maxWidth: '500px', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div className="glass-card" style={{ maxWidth: '500px', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto', background: 'var(--surface-bg)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>Book 1-on-1 Session</h2>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
@@ -183,11 +189,10 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
               >
                 <option value="">Choose a date...</option>
                 {dateOptions.map(date => {
-                  const dayOfWeek = date.getDay();
-                  const isAvailable = availability.some(a => a.dayOfWeek === dayOfWeek && a.isAvailable);
-                  if (!isAvailable) return null;
-                  
                   const dateString = format(date, 'yyyy-MM-dd');
+                  const slotsForThisDate = getAvailableSlotsForDate(dateString).filter(s => s.isValidStart);
+                  if (slotsForThisDate.length === 0) return null;
+                  
                   return (
                     <option key={dateString} value={dateString}>
                       {format(date, 'EEEE, MMM d')}
@@ -201,28 +206,45 @@ export function BookingCalendarModal({ teacherId, onClose }: BookingCalendarModa
             {selectedDate && (
               <div>
                 <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>3. Select Time</h3>
-                {availableSlots.length === 0 ? (
+                {availableSlots.filter(s => s.isValidStart).length === 0 ? (
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No available slots on this date.</p>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                    {availableSlots.map(time => (
-                      <button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        style={{
-                          padding: '0.5rem',
-                          textAlign: 'center',
-                          borderRadius: '0.5rem',
-                          transition: 'all 0.2s',
-                          cursor: 'pointer',
-                          border: selectedTime === time ? '1px solid var(--brand-500)' : '1px solid var(--surface-border)',
-                          background: selectedTime === time ? 'var(--brand-500)' : 'var(--surface-raised)',
-                          color: selectedTime === time ? 'white' : 'var(--text-secondary)'
-                        }}
-                      >
-                        {time}
-                      </button>
-                    ))}
+                    {availableSlots.map(slot => {
+                      let isHighlighted = false;
+                      if (selectedTime) {
+                        const [sh, sm] = selectedTime.split(':').map(Number);
+                        const selectedMins = sh * 60 + sm;
+                        const priceOpt = pricing.find(p => p.id === selectedPricingId);
+                        const dur = priceOpt ? priceOpt.durationMinutes : 0;
+                        if (slot.minutes >= selectedMins && slot.minutes <= selectedMins + dur) {
+                          isHighlighted = true;
+                        }
+                      }
+                      
+                      return (
+                        <button
+                          key={slot.time}
+                          disabled={!slot.isValidStart && !isHighlighted}
+                          onClick={() => {
+                            if (slot.isValidStart) setSelectedTime(slot.time);
+                          }}
+                          style={{
+                            padding: '0.5rem',
+                            textAlign: 'center',
+                            borderRadius: '0.5rem',
+                            transition: 'all 0.2s',
+                            cursor: slot.isValidStart ? 'pointer' : 'default',
+                            border: isHighlighted ? '1px solid var(--brand-500)' : '1px solid var(--surface-border)',
+                            background: isHighlighted ? 'var(--brand-500)' : 'var(--surface-raised)',
+                            color: isHighlighted ? 'white' : 'var(--text-secondary)',
+                            opacity: (!slot.isValidStart && !isHighlighted) ? 0.3 : 1
+                          }}
+                        >
+                          {slot.time}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>

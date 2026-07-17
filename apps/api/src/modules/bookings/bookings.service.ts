@@ -46,11 +46,13 @@ export const bookingsService = {
 
     const scheduledAt = new Date(input.scheduledAt);
     const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
-    const sevenDays = 7 * oneDay;
+    const teacherAvail = await bookingsRepository.getTeacherAvailability(input.teacherId);
+    const advanceNoticeHours = teacherAvail.advanceNoticeHours;
+    const advanceNoticeMs = advanceNoticeHours * 60 * 60 * 1000;
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
 
-    if (scheduledAt.getTime() <= now + oneDay) {
-      throw Errors.badRequest('Bookings must be scheduled at least 24 hours in advance.');
+    if (scheduledAt.getTime() <= now + advanceNoticeMs) {
+      throw Errors.badRequest(`Bookings must be scheduled at least ${advanceNoticeHours} hours in advance.`);
     }
 
     if (scheduledAt.getTime() > now + sevenDays) {

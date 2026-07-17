@@ -70,7 +70,7 @@ export default function EmployeeDashboardPage() {
 
       <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '1rem' }}>My Courses</h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div className="responsive-grid-3">
         {courses.map(({ enrollment, overallProgressPercent }) => (
           <div key={enrollment.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ position: 'relative', height: 160, background: 'var(--surface-active)' }}>
@@ -125,7 +125,7 @@ export default function EmployeeDashboardPage() {
         Available from Company
       </h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div className="responsive-grid-3">
         {availableLicenses.map((license) => (
           <div key={license.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ height: 160, background: 'var(--surface-active)' }}>

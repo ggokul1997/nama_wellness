@@ -10,6 +10,8 @@ interface LessonSidebarProps {
   onClaimCertificate?: () => void;
   onLeaveReview?: () => void;
   claimingCert?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function LessonSidebar({ 
@@ -22,13 +24,23 @@ export function LessonSidebar({
   onClaimCertificate,
   onLeaveReview,
   claimingCert,
+  isOpen,
+  onClose,
 }: LessonSidebarProps) {
   return (
-    <aside style={{ width: '300px', borderRight: '1px solid var(--surface-border)', display: 'flex', flexDirection: 'column', background: 'var(--surface-color)' }}>
-      <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--surface-border)' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{course.title}</h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Status: {enrollment.status}</p>
-      </div>
+    <>
+      <div 
+          className={`sidebar-overlay ${isOpen ? 'is-open' : ''}`}
+          onClick={onClose}
+        />
+      <aside className={`lesson-sidebar ${isOpen ? 'is-open' : ''}`}>
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>{course.title}</h2>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Status: {enrollment.status}</p>
+          </div>
+          <button className="hide-desktop btn btn-ghost btn-sm" onClick={onClose} style={{ padding: '0.5rem', fontSize: '1.25rem' }}>✕</button>
+        </div>
       
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
         {course.modules?.map((module: CourseModule) => (
@@ -116,5 +128,6 @@ export function LessonSidebar({
         </div>
       )}
     </aside>
+    </>
   );
 }

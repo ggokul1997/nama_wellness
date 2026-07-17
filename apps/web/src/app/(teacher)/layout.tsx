@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { MobileHeader } from '@/components/layout/MobileHeader';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { ROUTES } from '@nama/shared';
 import { teacherApplicationsApi } from '@/lib/api/teacher-applications';
+import { DesktopNotification } from '@/components/layout/DesktopNotification';
 
 const TEACHER_NAV = [
+  { href: '/courses', label: 'Explore Courses', icon: '🔍' },
   { href: ROUTES.TEACHER_DASHBOARD, label: 'Dashboard', icon: '🏠' },
   { href: ROUTES.TEACHER_ONBOARDING, label: 'Onboarding', icon: '📋' },
   { href: ROUTES.TEACHER_COURSES, label: 'My Courses', icon: '📚' },
@@ -24,6 +28,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const [isApproved, setIsApproved] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     teacherApplicationsApi.getMyApplication()
@@ -57,10 +62,33 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
 
   return (
     <QueryProvider>
+      <MobileHeader 
+        onMenuClick={() => setIsSidebarOpen(true)} 
+        portalName="Teacher" 
+        portalIcon="🧑‍🏫" 
+      />
+      <div 
+        className={`sidebar-overlay ${isSidebarOpen ? 'is-open' : ''}`} 
+        onClick={() => setIsSidebarOpen(false)} 
+      />
+      
       <div className="layout-with-sidebar">
-        <Sidebar navItems={visibleNav} portalName="Teacher" portalIcon="🧑‍🏫" accentColor="#34d399" />
-        <main className="main-content">{children}</main>
+        <Sidebar 
+          navItems={visibleNav} 
+          portalName="Teacher" 
+          portalIcon="🧑‍🏫" 
+          accentColor="#34d399" 
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+        <main className="main-content">
+          <DesktopNotification />
+          {children}
+        </main>
       </div>
+      
+      {/* We only show 5 nav items in the bottom nav on mobile */}
+      <BottomNav navItems={visibleNav} />
     </QueryProvider>
   );
 }

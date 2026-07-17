@@ -8,8 +8,10 @@ import { engagementApi } from '@/lib/api/engagement';
 import { LessonSidebar } from './_components/LessonSidebar';
 import { LessonContentArea } from './_components/LessonContentArea';
 import { BookingCalendarModal } from '@/components/bookings/BookingCalendarModal';
+import { useDialog } from '@/components/providers/DialogProvider';
 
 export default function StudentCourseLearnPage({ params }: { params: Promise<{ slug: string }> }) {
+  const dialog = useDialog();
   const { slug } = use(params);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +27,7 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [claimingCert, setClaimingCert] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [isLessonListOpen, setIsLessonListOpen] = useState(false);
 
   useEffect(() => {
     fetchCourseProgress(true);
@@ -62,7 +65,7 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
       // Refresh to update progress checkmarks
       await fetchCourseProgress();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update progress'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to update progress') });
     } finally {
       setUpdating(false);
     }
@@ -80,7 +83,7 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
       // Refresh to update progress checkmarks
       await fetchCourseProgress();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update progress'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to update progress') });
     } finally {
       setUpdating(false);
     }
@@ -101,9 +104,9 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
     try {
       setClaimingCert(true);
       await engagementApi.issueCertificate(enrollment.course.id);
-      alert('Certificate claimed successfully! You can view it in your dashboard.');
+      await dialog.alert({ title: 'Notification', message: 'Certificate claimed successfully! You can view it in your dashboard.' });
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to claim certificate. Maybe you already have one?'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to claim certificate. Maybe you already have one?') });
     } finally {
       setClaimingCert(false);
     }
@@ -121,7 +124,7 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
         comment: reviewComment
       });
       setShowReviewModal(false);
-      alert('Review submitted successfully!');
+      await dialog.alert({ title: 'Notification', message: 'Review submitted successfully!' });
     } catch (err: unknown) {
       setReviewError(getErrorMessage(err, 'Failed to submit review'));
     } finally {
@@ -137,7 +140,7 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
   const { course } = enrollment;
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 57px)', overflow: 'hidden', background: 'var(--bg-primary)' }}>
+    <div className="learn-container">
       <LessonSidebar 
         course={course}
         enrollment={enrollment}
@@ -149,6 +152,8 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
         onLeaveReview={() => setShowReviewModal(true)}
         onBookSession={() => setShowBookingModal(true)}
         claimingCert={claimingCert}
+        isOpen={isLessonListOpen}
+        onClose={() => setIsLessonListOpen(false)}
       />
 
       {/* Main Content Area */}
@@ -165,12 +170,32 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
             Select a lesson from the sidebar to begin.
           </div>
         )}
+
+        {/* Mobile Toggle Button */}
+        <button
+          className="hide-desktop btn btn-primary"
+          onClick={() => setIsLessonListOpen(true)}
+          style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            borderRadius: 'var(--radius-full)',
+            padding: '1rem',
+            boxShadow: 'var(--shadow-lg)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <span>📋</span> Lessons
+        </button>
       </main>
 
       {/* Review Modal */}
       {showReviewModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem', background: 'var(--surface-bg)' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Leave a Review</h3>
             {reviewError && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{reviewError}</div>}
             <form onSubmit={handleSubmitReview} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

@@ -8,7 +8,8 @@ export const teacherAvailabilitySchema = z.object({
 });
 
 export const updateAvailabilitySchema = z.object({
-  slots: z.array(teacherAvailabilitySchema)
+  slots: z.array(teacherAvailabilitySchema),
+  advanceNoticeHours: z.number().min(0).max(168).optional()
 });
 
 export const individualPricingSchema = z.object({

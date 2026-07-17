@@ -5,8 +5,10 @@ import { engagementApi } from '@/lib/api/engagement';
 import type { Certificate } from '@nama/shared';
 import { getErrorMessage } from '@/lib/error';
 import { format } from 'date-fns';
+import { useDialog } from '@/components/providers/DialogProvider';
 
 export default function StudentCertificatesPage() {
+  const dialog = useDialog();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export default function StudentCertificatesPage() {
           <div style={{ color: 'var(--text-secondary)' }}>You haven't earned any certificates yet. Complete a course to earn one!</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        <div className="responsive-grid-3">
           {certificates.map((cert) => (
             <div key={cert.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '4px solid var(--brand-500)' }}>
               <div>
@@ -62,7 +64,7 @@ export default function StudentCertificatesPage() {
 
               <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
                 <button 
-                  onClick={() => alert('PDF Generation would happen here in production.')}
+                  onClick={async () => await dialog.alert({ title: 'Notification', message: 'PDF Generation would happen here in production.' })}
                   className="btn btn-outline"
                   style={{ width: '100%' }}
                 >

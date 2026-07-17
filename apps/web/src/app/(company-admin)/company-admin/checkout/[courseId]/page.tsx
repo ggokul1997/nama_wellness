@@ -143,10 +143,10 @@ export default function CorporateCheckoutPage({ params }: { params: Promise<{ co
               <img 
                 src={course.coverImageUrl} 
                 alt={course.title}
-                style={{ width: '240px', height: '160px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}
+                style={{ width: '100%', maxWidth: '240px', height: '160px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}
               />
             ) : (
-              <div style={{ width: '240px', height: '160px', background: 'var(--surface-raised)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+              <div style={{ width: '100%', maxWidth: '240px', height: '160px', background: 'var(--surface-raised)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
                 No Cover Image
               </div>
             )}
@@ -190,7 +190,7 @@ export default function CorporateCheckoutPage({ params }: { params: Promise<{ co
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', padding: '1.5rem', background: 'var(--surface-raised)', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem', padding: '1.5rem', background: 'var(--surface-raised)', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
             <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>Total Due</span>
             <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--brand-500)' }}>
               ₹{totalDue}

@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { companiesApi } from '@/lib/api/companies';
 import { getErrorMessage } from '@/lib/error';
 import type { CompanyEmployee } from '@nama/shared';
+import { useDialog } from '@/components/providers/DialogProvider';
 
 export default function CompanyEmployeesPage() {
+  const dialog = useDialog();
   const [employees, setEmployees] = useState<CompanyEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,24 +34,25 @@ export default function CompanyEmployeesPage() {
 
     try {
       await companiesApi.inviteEmployee(email);
-      alert(`Successfully invited ${email}`);
+      await dialog.alert({ title: 'Notification', message: `Successfully invited ${email}` });
       fetchEmployees();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to invite employee'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to invite employee') });
     }
   };
 
   const handleDelete = async (userId: string, email: string) => {
-    if (!confirm(`Are you sure you want to delete the employee ${email}? This action is permanent and will restore any consumed licenses.`)) {
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: `Are you sure you want to delete the employee ${email}? This action is permanent and will restore any consumed licenses.`, isDestructive: true, confirmText: 'Delete' });
+    if (!confirmed) {
       return;
     }
     
     try {
       await companiesApi.deleteEmployee(userId);
-      alert(`Successfully deleted ${email}`);
+      await dialog.alert({ title: 'Notification', message: `Successfully deleted ${email}` });
       fetchEmployees();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to delete employee'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to delete employee') });
     }
   };
 
@@ -63,7 +66,7 @@ export default function CompanyEmployeesPage() {
 
   return (
     <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>Employees</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -83,8 +86,8 @@ export default function CompanyEmployeesPage() {
         {employees.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>No employees found.</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', padding: '0.75rem 1rem', borderBottom: '1px solid var(--surface-border)', color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600 }}>
+          <div className="table-responsive" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', minWidth: '800px', padding: '0.75rem 1rem', borderBottom: '1px solid var(--surface-border)', color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600 }}>
               <div>Name</div>
               <div>Email</div>
               <div>Joined</div>
@@ -95,7 +98,7 @@ export default function CompanyEmployeesPage() {
               const isPending = (emp.user as any)?.passwordHash === 'invitation-pending';
               
               return (
-                <div key={emp.id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', padding: '1rem', alignItems: 'center', background: 'var(--surface-hover)', borderRadius: '0.5rem' }}>
+                <div key={emp.id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', minWidth: '800px', padding: '1rem', alignItems: 'center', background: 'var(--surface-hover)', borderRadius: '0.5rem' }}>
                   <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
                     {emp.user?.profile?.firstName} {emp.user?.profile?.lastName}
                   </div>

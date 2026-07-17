@@ -102,7 +102,7 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
       <div style={{ 
         position: 'relative',
         padding: '6rem 2rem',
-        background: course.coverImageUrl ? `linear-gradient(to bottom, rgba(10,10,10,0.8), var(--bg-default)), url(${course.coverImageUrl}) center/cover` : 'linear-gradient(to bottom, var(--surface-default), var(--bg-default))',
+        background: course.coverImageUrl ? `linear-gradient(to bottom, rgba(10,10,10,0.8), var(--surface-bg)), url(${course.coverImageUrl}) center/cover` : 'linear-gradient(to bottom, var(--surface-base), var(--surface-bg))',
         borderBottom: '1px solid var(--surface-border)'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative', zIndex: 10 }}>
@@ -140,10 +140,10 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
       </div>
 
       {/* Content & Sidebar Layout */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 2rem', display: 'grid', gridTemplateColumns: '1fr 350px', gap: '4rem', alignItems: 'start' }}>
+      <div className="course-detail-grid" style={{ maxWidth: '1200px', margin: '0 auto', alignItems: 'start' }}>
         
         {/* Left Column: Curriculum */}
-        <div>
+        <div className="course-main">
           <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '2rem', color: 'var(--text-primary)' }}>Curriculum</h2>
           
           {!course.modules || course.modules.length === 0 ? (
@@ -213,7 +213,7 @@ export default function PublicCourseDetailPage({ params }: { params: Promise<{ s
         </div>
 
         {/* Right Column: Sticky Action Card */}
-        <div style={{ position: 'sticky', top: '2rem' }}>
+        <div className="course-sidebar" style={{ position: 'sticky', top: '2rem' }}>
           <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Price</p>

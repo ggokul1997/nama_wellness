@@ -7,8 +7,10 @@ import type { Enrollment, Lesson } from '@nama/shared';
 import { engagementApi } from '@/lib/api/engagement';
 import { LessonSidebar } from './_components/LessonSidebar';
 import { LessonContentArea } from './_components/LessonContentArea';
+import { useDialog } from '@/components/providers/DialogProvider';
 
 export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ slug: string }> }) {
+  const dialog = useDialog();
   const { slug } = use(params);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,7 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [claimingCert, setClaimingCert] = useState(false);
+  const [isLessonListOpen, setIsLessonListOpen] = useState(false);
 
   useEffect(() => {
     fetchCourseProgress(true);
@@ -60,7 +63,7 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
       // Refresh to update progress checkmarks
       await fetchCourseProgress();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update progress'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to update progress') });
     } finally {
       setUpdating(false);
     }
@@ -78,7 +81,7 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
       // Refresh to update progress checkmarks
       await fetchCourseProgress();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update progress'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to update progress') });
     } finally {
       setUpdating(false);
     }
@@ -99,9 +102,9 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
     try {
       setClaimingCert(true);
       await engagementApi.issueCertificate(enrollment.course.id);
-      alert('Certificate claimed successfully! You can view it in your dashboard.');
+      await dialog.alert({ title: 'Notification', message: 'Certificate claimed successfully! You can view it in your dashboard.' });
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to claim certificate. Maybe you already have one?'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to claim certificate. Maybe you already have one?') });
     } finally {
       setClaimingCert(false);
     }
@@ -119,7 +122,7 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
         comment: reviewComment
       });
       setShowReviewModal(false);
-      alert('Review submitted successfully!');
+      await dialog.alert({ title: 'Notification', message: 'Review submitted successfully!' });
     } catch (err: unknown) {
       setReviewError(getErrorMessage(err, 'Failed to submit review'));
     } finally {
@@ -135,7 +138,7 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
   const { course } = enrollment;
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 57px)', overflow: 'hidden', background: 'var(--bg-primary)' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 57px)', overflow: 'hidden', background: 'var(--bg-primary)', position: 'relative' }}>
       <LessonSidebar 
         course={course}
         enrollment={enrollment}
@@ -146,6 +149,8 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
         onClaimCertificate={handleClaimCertificate}
         onLeaveReview={() => setShowReviewModal(true)}
         claimingCert={claimingCert}
+        isOpen={isLessonListOpen}
+        onClose={() => setIsLessonListOpen(false)}
       />
 
       {/* Main Content Area */}
@@ -162,6 +167,26 @@ export default function EmployeeCourseLearnPage({ params }: { params: Promise<{ 
             Select a lesson from the sidebar to begin.
           </div>
         )}
+
+        {/* Mobile Toggle Button */}
+        <button
+          className="hide-desktop btn btn-primary"
+          onClick={() => setIsLessonListOpen(true)}
+          style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            borderRadius: 'var(--radius-full)',
+            padding: '1rem',
+            boxShadow: 'var(--shadow-lg)',
+            zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <span>📋</span> Lessons
+        </button>
       </main>
 
       {/* Review Modal */}

@@ -11,6 +11,7 @@ export function Navigation() {
   const isAuthenticated = !!user;
   const activeRole = user?.roles[0]?.role || null;
   const [mounted, setMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -32,38 +33,46 @@ export function Navigation() {
           </span>
         )}
       </div>
-      <nav style={{ display: 'flex', gap: '1.5rem', fontSize: '0.875rem', alignItems: 'center' }}>
-        <Link href="/courses" className="nav-link">Explore Courses</Link>
+      <button 
+        className="hide-desktop"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.5rem', cursor: 'pointer' }}
+      >
+        ☰
+      </button>
+
+      <nav className={`public-nav ${isMobileMenuOpen ? 'is-open' : ''}`} style={{ display: 'flex', gap: '1.5rem', fontSize: '0.875rem', alignItems: 'center' }}>
+        <Link href="/courses" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Explore Courses</Link>
         
         {mounted && isAuthenticated && (
           <>
             {activeRole === 'ADMIN' ? (
-              <Link href={ROUTES.ADMIN_DASHBOARD} className="nav-link" style={{ color: 'var(--brand-400)' }}>Admin Portal</Link>
+              <Link href={ROUTES.ADMIN_DASHBOARD} className="nav-link" style={{ color: 'var(--brand-400)' }} onClick={() => setIsMobileMenuOpen(false)}>Admin Portal</Link>
             ) : activeRole === 'TEACHER' ? (
-              <Link href={ROUTES.TEACHER_DASHBOARD} className="nav-link">Teacher Dashboard</Link>
+              <Link href={ROUTES.TEACHER_DASHBOARD} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Teacher Dashboard</Link>
             ) : activeRole === 'COMPANY_ADMIN' ? (
-              <Link href={ROUTES.COMPANY_ADMIN_DASHBOARD} className="nav-link">Company Portal</Link>
+              <Link href={ROUTES.COMPANY_ADMIN_DASHBOARD} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Company Portal</Link>
             ) : activeRole === 'EMPLOYEE' ? (
-              <Link href={ROUTES.EMPLOYEE_DASHBOARD} className="nav-link">My Learning</Link>
+              <Link href={ROUTES.EMPLOYEE_DASHBOARD} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>My Learning</Link>
             ) : (
-              <Link href={ROUTES.STUDENT_DASHBOARD} className="nav-link">My Dashboard</Link>
+              <Link href={ROUTES.STUDENT_DASHBOARD} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>My Dashboard</Link>
             )}
           </>
         )}
 
         {mounted && !isAuthenticated && (
-          <Link href={ROUTES.TEACHER_ONBOARDING} className="nav-link">Teach on Nama</Link>
+          <Link href={ROUTES.TEACHER_ONBOARDING} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Teach on Nama</Link>
         )}
 
         {mounted && (
           isAuthenticated ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem' }}>
+            <div className="nav-user-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem' }}>
               <NotificationBell />
-              <span style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
+              <span className="hide-mobile" style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
               <button onClick={handleLogout} className="btn" style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)' }}>Logout</button>
             </div>
           ) : (
-            <Link href={ROUTES.LOGIN} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>Sign In</Link>
+            <Link href={ROUTES.LOGIN} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }} onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
           )
         )}
       </nav>

@@ -12,8 +12,8 @@ export const bookingsController = {
   async getAvailability(req: Request, res: Response, next: NextFunction) {
     try {
       const teacherId = req.params.teacherId as string;
-      const availability = await bookingsService.getAvailability(teacherId);
-      res.json({ success: true, data: { availability } });
+      const result = await bookingsService.getAvailability(teacherId);
+      res.json({ success: true, data: result });
     } catch (error) {
       next(error);
     }
@@ -23,8 +23,8 @@ export const bookingsController = {
     try {
       const teacherId = req.user!.sub;
       const input = updateAvailabilitySchema.parse(req.body);
-      const availability = await bookingsService.updateAvailability(teacherId, input);
-      res.json({ success: true, data: { availability } });
+      const result = await bookingsService.updateAvailability(teacherId, input);
+      res.json({ success: true, data: result });
     } catch (error) {
       next(error);
     }

@@ -92,7 +92,7 @@ export default function TeacherPricingPage() {
 
   return (
     <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>1-on-1 Session Pricing</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem', maxWidth: '800px' }}>
@@ -109,7 +109,7 @@ export default function TeacherPricingPage() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
         {pricingList.map(pricing => (
           <div key={pricing.id} className="glass-card" style={{ padding: '1.5rem', opacity: pricing.isActive ? 1 : 0.6, display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>

@@ -6,10 +6,12 @@ import { coursesApi } from '@/lib/api/courses';
 import type { Course, CourseModule, CoursePricing } from '@nama/shared';
 import Link from 'next/link';
 import { getErrorMessage } from '@/lib/error';
+import { useDialog } from '@/components/providers/DialogProvider';
 
 export default function AdminReviewCoursePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
+  const dialog = useDialog();
 
   const [course, setCourse] = useState<(Course & { modules?: CourseModule[], pricings?: CoursePricing[] }) | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,8 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirm('Are you sure you want to submit this review?')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to submit this review?' });
+    if (!confirmed) return;
     
     setSubmitting(true);
     try {
@@ -59,24 +62,25 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
         finalPrice: reviewStatus === 'APPROVED' && finalPrice !== '' ? Number(finalPrice) : undefined,
       });
       
-      alert('Review submitted successfully!');
+      await dialog.alert({ title: 'Notification', message: 'Review submitted successfully!' });
       router.push('/admin/courses');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to submit review'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to submit review') });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!confirm('Are you sure you want to publish this course? It will become publicly available.')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you sure you want to publish this course? It will become publicly available.' });
+    if (!confirmed) return;
     
     try {
       await coursesApi.adminPublishCourse(id);
-      alert('Course published successfully!');
+      await dialog.alert({ title: 'Notification', message: 'Course published successfully!' });
       router.push('/admin/courses');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to publish course'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to publish course') });
     }
   };
 
@@ -88,10 +92,10 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
         isAvailableForCorporate,
         corporatePrice: corporatePrice === '' ? null : Number(corporatePrice)
       });
-      alert('Corporate settings updated successfully!');
+      await dialog.alert({ title: 'Notification', message: 'Corporate settings updated successfully!' });
       fetchCourse();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to update corporate settings'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to update corporate settings') });
     } finally {
       setSubmittingCorporate(false);
     }
@@ -119,7 +123,7 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
 
   return (
     <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         <Link href="/admin/courses" className="btn btn-ghost">← Back to Courses</Link>
         <div>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>Review Course</h1>
@@ -130,7 +134,7 @@ export default function AdminReviewCoursePage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+      <div className="course-detail-grid" style={{ marginTop: '2rem' }}>
         {/* Left Column - Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           

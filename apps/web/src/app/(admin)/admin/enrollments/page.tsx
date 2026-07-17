@@ -47,7 +47,7 @@ export default function AdminEnrollmentsPage() {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div className="page-content" style={{ maxWidth: '600px', margin: '0 auto' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Manual Course Assignment</h1>
         <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Manually enroll a student in a published course. (e.g. For offline payments, corporate users, or support overrides).</p>

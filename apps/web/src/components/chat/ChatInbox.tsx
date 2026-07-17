@@ -260,7 +260,7 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
   });
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${selectedSession ? styles.sessionActive : ''}`}>
       {/* Sidebar: Session List */}
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
@@ -349,15 +349,27 @@ export default function ChatInbox({ currentUserId, role }: { currentUserId: stri
           <>
             {/* Chat Header */}
             <div className={styles.chatHeader}>
-              <h2 className={styles.chatHeaderTitle}>
-                {role === 'STUDENT' ? selectedSession.course?.title : `${getOtherUser(selectedSession)?.profile?.firstName} ${getOtherUser(selectedSession)?.profile?.lastName}`}
-              </h2>
-              <span className={styles.chatHeaderSubtitle}>
-                {role === 'STUDENT' 
-                  ? `with ${getOtherUser(selectedSession)?.profile?.firstName} ${getOtherUser(selectedSession)?.profile?.lastName}`
-                  : `Course: ${selectedSession.course?.title}`
-                }
-              </span>
+              <button 
+                className={styles.mobileBackButton} 
+                onClick={() => setSelectedSession(null)}
+                aria-label="Back to conversations"
+              >
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              <div className={styles.chatHeaderInfo}>
+                <h2 className={styles.chatHeaderTitle}>
+                  {role === 'STUDENT' ? selectedSession.course?.title : `${getOtherUser(selectedSession)?.profile?.firstName} ${getOtherUser(selectedSession)?.profile?.lastName}`}
+                </h2>
+                <span className={styles.chatHeaderSubtitle}>
+                  {role === 'STUDENT' 
+                    ? `with ${getOtherUser(selectedSession)?.profile?.firstName} ${getOtherUser(selectedSession)?.profile?.lastName}`
+                    : `Course: ${selectedSession.course?.title}`
+                  }
+                </span>
+              </div>
             </div>
             
             {/* Messages Area */}

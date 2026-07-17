@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useDialog } from '@/components/providers/DialogProvider';
 import { useAuth } from '@/lib/auth/session';
 import { teacherApplicationsApi } from '@/lib/api/teacher-applications';
 import type { TeacherApplication, TeacherDocument, DocumentType } from '@nama/shared';
@@ -9,6 +10,7 @@ import { FileUpload } from '@/components/ui/FileUpload';
 
 export default function TeacherApplyPage() {
   const { user } = useAuth();
+  const dialog = useDialog();
   const [application, setApplication] = useState<TeacherApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -85,7 +87,7 @@ export default function TeacherApplyPage() {
 
   const handleSubmit = async () => {
     if (!firstName || !lastName || !teachingSubject) {
-      alert('Please fill out your First Name, Last Name, and Teaching Subject.');
+      await dialog.alert({ title: 'Notification', message: 'Please fill out your First Name, Last Name, and Teaching Subject.' });
       return;
     }
     
@@ -93,11 +95,12 @@ export default function TeacherApplyPage() {
     const certDoc = application?.documents?.find((d: TeacherDocument) => d.documentType === 'CERTIFICATION');
     
     if (!govIdDoc || !certDoc) {
-      alert('You must upload both a Government ID and a Certification to submit your application.');
+      await dialog.alert({ title: 'Notification', message: 'You must upload both a Government ID and a Certification to submit your application.' });
       return;
     }
 
-    if (!confirm('Are you ready to submit your application for review?')) return;
+    const confirmed = await dialog.confirm({ title: 'Confirm', message: 'Are you ready to submit your application for review?' });
+    if (!confirmed) return;
     
     try {
       const res = await teacherApplicationsApi.submitApplication(application!.id, {
@@ -106,9 +109,9 @@ export default function TeacherApplyPage() {
         teachingSubject,
       });
       setApplication(res.data?.application ?? null);
-      alert('Application submitted successfully!');
+      await dialog.alert({ title: 'Notification', message: 'Application submitted successfully!' });
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Failed to submit application'));
+      await dialog.alert({ title: 'Notification', message: getErrorMessage(err, 'Failed to submit application') });
     }
   };
 
@@ -192,7 +195,7 @@ export default function TeacherApplyPage() {
             <div>
               <h3 style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-primary)' }}>Government ID</h3>
               {govIdDoc && !isReplacingGovId ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(52,211,153,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', padding: '1rem', background: 'rgba(52,211,153,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(52,211,153,0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ fontSize: '1.5rem' }}>🪪</div>
                     <div>
@@ -247,7 +250,7 @@ export default function TeacherApplyPage() {
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Upload your teaching certificate or relevant degree.</p>
               
               {certDoc && !isReplacingCert ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(139,92,246,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', padding: '1rem', background: 'rgba(139,92,246,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(139,92,246,0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ fontSize: '1.5rem' }}>🎓</div>
                     <div>
@@ -301,9 +304,32 @@ export default function TeacherApplyPage() {
             {isDraft && (
               <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
                 {!canSubmit && (
-                  <div className="alert alert-warning" style={{ fontSize: '0.875rem', padding: '0.75rem', width: '100%' }}>
-                    <strong>⚠️ Incomplete Application:</strong> Please complete the following required fields:
-                    <ul style={{ margin: '0.5rem 0 0 1.5rem', padding: 0 }}>
+                  <div className="alert alert-warning" style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '0.75rem', 
+                    padding: '1.25rem', 
+                    borderRadius: 'var(--radius-lg)', 
+                    width: '100%', 
+                    boxSizing: 'border-box',
+                    borderLeft: '4px solid #fcd34d'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '1rem', color: '#fcd34d' }}>
+                      <span>⚠️</span>
+                      <span>Incomplete Application</span>
+                    </div>
+                    <div style={{ fontSize: '0.875rem', lineHeight: 1.5, opacity: 0.9 }}>
+                      Please complete the following required fields to proceed:
+                    </div>
+                    <ul style={{ 
+                      margin: 0, 
+                      paddingLeft: '1.25rem', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '0.375rem', 
+                      fontSize: '0.875rem',
+                      opacity: 0.9
+                    }}>
                       {!firstName && <li>First Name</li>}
                       {!lastName && <li>Last Name</li>}
                       {!teachingSubject && <li>Teaching Subject</li>}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { engagementApi } from '@/lib/api/engagement';
 import type { Notification } from '@nama/shared';
@@ -11,6 +11,22 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { socket } = useSocket();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open]);
 
   useEffect(() => {
     // Initial fetch on mount
@@ -52,7 +68,7 @@ export function NotificationBell() {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={containerRef} style={{ position: 'relative' }}>
       <button 
         onClick={() => setOpen(!open)}
         style={{ 
@@ -75,9 +91,12 @@ export function NotificationBell() {
 
       {open && (
         <div className="glass-card" style={{
-          position: 'absolute', top: '100%', right: 0, width: '350px', 
-          maxHeight: '400px', overflowY: 'auto', zIndex: 1000,
-          marginTop: '0.5rem', display: 'flex', flexDirection: 'column'
+          position: 'absolute', top: '100%', right: 0, 
+          width: 'min(350px, 90vw)', 
+          maxHeight: '70vh', overflowY: 'auto', zIndex: 1000,
+          marginTop: '0.5rem', display: 'flex', flexDirection: 'column',
+          backgroundColor: 'var(--surface-overlay)',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
         }}>
           <div style={{ padding: '1rem', borderBottom: '1px solid var(--surface-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h4 style={{ margin: 0, fontWeight: 600 }}>Notifications</h4>

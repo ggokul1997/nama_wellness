@@ -73,47 +73,32 @@ export default function TeacherEarningsPage() {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>Transaction History</h2>
         </div>
         
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--surface-border)', background: 'var(--surface-hover)' }}>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Date</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Course</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Student</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Price Paid</th>
-                <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.875rem' }}>Your Cut (70%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.recentTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No successful transactions found.
-                  </td>
-                </tr>
-              ) : (
-                data.recentTransactions.map((tx) => (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
-                    <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>
-                      {new Date(tx.createdAt).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {tx.courseTitle}
-                    </td>
-                    <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
-                      {tx.studentName || tx.studentEmail || 'Anonymous'}
-                    </td>
-                    <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>
-                      {tx.currency} {tx.amount.toFixed(2)}
-                    </td>
-                    <td style={{ padding: '1rem', color: 'var(--success-500)', fontWeight: 600 }}>
-                      + {tx.currency} {tx.teacherCut.toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div style={{ padding: '1.5rem' }}>
+          {data.recentTransactions.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+              No successful transactions found.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {data.recentTransactions.map((tx) => (
+                <div key={tx.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', border: '1px solid var(--surface-border)', borderRadius: 'var(--radius-lg)', background: 'var(--surface-raised)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <h4 style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{tx.courseTitle}</h4>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{tx.studentName || tx.studentEmail || 'Anonymous'}</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontWeight: 700, color: 'var(--success-500)' }}>+ {tx.currency} {tx.teacherCut.toFixed(2)}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Price Paid: {tx.currency} {tx.amount.toFixed(2)}</p>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--surface-border)', paddingTop: '0.5rem' }}>
+                    {new Date(tx.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
