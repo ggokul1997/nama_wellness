@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-type DialogType = 'alert' | 'confirm';
+type DialogType = 'alert' | 'confirm' | 'prompt';
 
 interface DialogOptions {
   title: string;
@@ -11,11 +11,14 @@ interface DialogOptions {
   confirmText?: string;
   cancelText?: string;
   isDestructive?: boolean;
+  placeholder?: string;
+  defaultValue?: string;
 }
 
 interface DialogContextValue {
   alert: (options: string | Omit<DialogOptions, 'type'>) => Promise<void>;
   confirm: (options: string | Omit<DialogOptions, 'type'>) => Promise<boolean>;
+  prompt: (options: string | Omit<DialogOptions, 'type'>) => Promise<string | null>;
 }
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
@@ -31,7 +34,8 @@ export function useDialog() {
 export function DialogProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<DialogOptions | null>(null);
-  const [resolvePromise, setResolvePromise] = useState<((value: boolean | PromiseLike<boolean>) => void) | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [resolvePromise, setResolvePromise] = useState<((value: any) => void) | null>(null);
 
   const showAlert = useCallback((opts: string | Omit<DialogOptions, 'type'>) => {
     return new Promise<void>((resolve) => {
@@ -46,21 +50,35 @@ export function DialogProvider({ children }: { children: ReactNode }) {
     return new Promise<boolean>((resolve) => {
       const parsedOptions = typeof opts === 'string' ? { title: 'Confirm Action', message: opts } : opts;
       setOptions({ ...parsedOptions, type: 'confirm', confirmText: parsedOptions.confirmText || 'Confirm', cancelText: parsedOptions.cancelText || 'Cancel' });
-      setResolvePromise(() => resolve);
+      setResolvePromise(() => resolve as any);
       setIsOpen(true);
     });
   }, []);
 
-  const handleClose = (value: boolean) => {
+  const showPrompt = useCallback((opts: string | Omit<DialogOptions, 'type'>) => {
+    return new Promise<string | null>((resolve) => {
+      const parsedOptions = typeof opts === 'string' ? { title: 'Input Required', message: opts } : opts;
+      setOptions({ ...parsedOptions, type: 'prompt', confirmText: parsedOptions.confirmText || 'Submit', cancelText: parsedOptions.cancelText || 'Cancel' });
+      setInputValue(parsedOptions.defaultValue || '');
+      setResolvePromise(() => resolve as any);
+      setIsOpen(true);
+    });
+  }, []);
+
+  const handleClose = (isConfirmed: boolean) => {
     setIsOpen(false);
     if (resolvePromise) {
-      resolvePromise(value);
+      if (options?.type === 'prompt') {
+        resolvePromise(isConfirmed ? inputValue : null);
+      } else {
+        resolvePromise(isConfirmed);
+      }
       setResolvePromise(null);
     }
   };
 
   return (
-    <DialogContext.Provider value={{ alert: showAlert, confirm: showConfirm }}>
+    <DialogContext.Provider value={{ alert: showAlert, confirm: showConfirm, prompt: showPrompt }}>
       {children}
       
       {isOpen && options && (
@@ -87,8 +105,24 @@ export function DialogProvider({ children }: { children: ReactNode }) {
               {options.message}
             </div>
 
+            {options.type === 'prompt' && (
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={options.placeholder}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleClose(true);
+                  if (e.key === 'Escape') handleClose(false);
+                }}
+                className="input"
+                style={{ marginTop: '0.5rem', width: '100%', boxSizing: 'border-box' }}
+              />
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
-              {options.type === 'confirm' && (
+              {(options.type === 'confirm' || options.type === 'prompt') && (
                 <button 
                   onClick={() => handleClose(false)}
                   className="btn btn-ghost"

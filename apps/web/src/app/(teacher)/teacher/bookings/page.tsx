@@ -129,6 +129,11 @@ export default function TeacherBookingsPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                         <div>
                           <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>{session.title}</h3>
+                          {session.course && (
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem', fontWeight: 500 }}>
+                              Course: {session.course.title}
+                            </p>
+                          )}
                           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                             {format(new Date(session.scheduledAt), 'PPp')}
                           </p>
@@ -168,6 +173,11 @@ export default function TeacherBookingsPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                         <div>
                           <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>{session.title}</h3>
+                          {session.course && (
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem', fontWeight: 500 }}>
+                              Course: {session.course.title}
+                            </p>
+                          )}
                           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                             {format(new Date(session.scheduledAt), 'PPp')}
                           </p>

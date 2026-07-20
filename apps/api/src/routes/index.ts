@@ -15,6 +15,10 @@ import { certificatesRouter } from '../modules/certificates/certificates.routes.
 import { notificationsRouter } from '../modules/notifications/notifications.routes.js';
 import { chatRouter } from '../modules/chat/chat.routes.js';
 import { bookingsRoutes } from '../modules/bookings/bookings.routes.js';
+import discussionsRouter from '../modules/discussions/discussions.routes.js';
+import { analyticsRouter } from '../modules/analytics/analytics.routes.js';
+import { payoutsRouter } from '../modules/payouts/payouts.routes.js';
+
 export const v1Router: Router = Router();
 
 // Health check — no auth required
@@ -46,5 +50,8 @@ v1Router.use('/certificates', certificatesRouter);
 v1Router.use('/notifications', notificationsRouter);
 v1Router.use('/chat', chatRouter);
 v1Router.use('/bookings', bookingsRoutes);
+v1Router.use('/discussions', discussionsRouter);
+v1Router.use('/analytics', analyticsRouter);
+v1Router.use('/payouts', payoutsRouter);
 // Sprint B onwards — routes added here:
 // v1Router.use('/teacher', teacherRouter);

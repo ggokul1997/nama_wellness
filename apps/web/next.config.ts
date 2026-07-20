@@ -8,6 +8,7 @@ const apiBaseUrl =
   (process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000/api/v1').replace(/\/api\/v1\/?$/, '');
 
 const nextConfig: NextConfig = {
+  distDir: process.env.NODE_ENV === 'test' ? '.next-test' : '.next',
   reactStrictMode: true,
   // Proxy all /api/v1/* requests through Next.js to avoid cross-origin cookie issues.
   async rewrites() {

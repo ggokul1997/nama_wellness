@@ -33,7 +33,12 @@ export default function TeacherApplicationsPage() {
     
     let rejectionReason;
     if (!approve) {
-      rejectionReason = prompt('Reason for rejection (optional):');
+      const reason = await dialog.prompt({ 
+        title: 'Rejection Reason', 
+        message: 'Enter a reason for rejection (optional):',
+        placeholder: 'e.g. Incomplete documentation'
+      });
+      rejectionReason = reason || undefined;
     }
 
     try {

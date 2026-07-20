@@ -29,7 +29,11 @@ export default function CompanyEmployeesPage() {
   }, []);
 
   const handleInvite = async () => {
-    const email = prompt('Enter employee email to invite:');
+    const email = await dialog.prompt({ 
+      title: 'Invite Employee', 
+      message: 'Enter employee email to invite:',
+      placeholder: 'employee@company.com'
+    });
     if (!email) return;
 
     try {

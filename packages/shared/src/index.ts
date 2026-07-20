@@ -2,6 +2,8 @@
 export type * from './types/auth.types.js';
 export type * from './types/api.types.js';
 export type * from './types/category.types.js';
+export * from './types/analytics.types.js';
+export * from './types/payouts.types.js';
 export type * from './types/teacher-application.types.js';
 export type * from './types/course.types.js';
 export type * from './types/study-material.types.js';

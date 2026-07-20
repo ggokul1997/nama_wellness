@@ -24,7 +24,7 @@ export const liveSessionsRepository = {
   async getStudentUpcomingSessions(studentId: string) {
     // Find all sessions for courses the student is enrolled in
     const enrollments = await prisma.enrollment.findMany({
-      where: { userId: studentId, status: 'ACTIVE' },
+      where: { userId: studentId, status: { in: ['ACTIVE', 'COMPLETED'] } },
       select: { courseId: true },
     });
     

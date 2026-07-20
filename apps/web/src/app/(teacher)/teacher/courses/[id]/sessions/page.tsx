@@ -144,7 +144,7 @@ export default function TeacherCourseSessionsPage({ params }: { params: Promise<
 
   return (
     <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>Live Sessions</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Schedule and manage live classes for this course.</p>
@@ -156,7 +156,7 @@ export default function TeacherCourseSessionsPage({ params }: { params: Promise<
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', alignItems: 'start' }}>
         <div className="glass-card" style={{ padding: '1.5rem' }}>
           <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem' }}>Schedule New Session</h3>
           <form onSubmit={handleSchedule} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -175,7 +175,7 @@ export default function TeacherCourseSessionsPage({ params }: { params: Promise<
               <input type="url" className="input" required value={meetingUrl} onChange={e => setMeetingUrl(e.target.value)} placeholder="https://zoom.us/j/..." />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
               <div>
                 <label className="label">Date</label>
                 <input 
@@ -247,13 +247,13 @@ export default function TeacherCourseSessionsPage({ params }: { params: Promise<
             </div>
           ) : (
             sessions.map(session => (
-              <div key={session.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={session.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h4 style={{ fontWeight: 600, fontSize: '1.125rem' }}>{session.title}</h4>
                   <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                     {format(new Date(session.scheduledAt), 'PPp')} • {session.durationMinutes} min
                   </div>
-                  <a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-500)', fontSize: '0.875rem', display: 'inline-block', marginTop: '0.5rem' }}>
+                  <a href={session.meetingUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-500)', fontSize: '0.875rem', display: 'inline-block', marginTop: '0.5rem', wordBreak: 'break-all' }}>
                     {session.meetingUrl}
                   </a>
                 </div>

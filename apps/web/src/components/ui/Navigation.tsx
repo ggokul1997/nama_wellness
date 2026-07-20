@@ -69,10 +69,10 @@ export function Navigation() {
             <div className="nav-user-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem' }}>
               <NotificationBell />
               <span className="hide-mobile" style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
-              <button onClick={handleLogout} className="btn" style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)' }}>Logout</button>
+              <button onClick={handleLogout} className="btn btn-danger" style={{ padding: '0.5rem 1rem' }}>Logout</button>
             </div>
           ) : (
-            <Link href={ROUTES.LOGIN} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }} onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+            <Link href={ROUTES.LOGIN} className="btn btn-success" style={{ padding: '0.5rem 1rem' }} onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
           )
         )}
       </nav>

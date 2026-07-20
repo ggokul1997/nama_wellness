@@ -6,6 +6,7 @@ export const notificationsRepository = {
     userId: string;
     title: string;
     message: string;
+    link?: string;
     type?: NotificationType;
   }) {
     return prisma.notification.create({

@@ -1,0 +1,16 @@
+{
+  "name": "@nama/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0",
+    "@types/node": "^20.11.24"
+  },
+  "dependencies": {
+    "@nama/prisma": "workspace:^"
+  }
+}

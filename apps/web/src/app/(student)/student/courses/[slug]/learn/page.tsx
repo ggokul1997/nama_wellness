@@ -10,9 +10,13 @@ import { LessonContentArea } from './_components/LessonContentArea';
 import { BookingCalendarModal } from '@/components/bookings/BookingCalendarModal';
 import { useDialog } from '@/components/providers/DialogProvider';
 
-export default function StudentCourseLearnPage({ params }: { params: Promise<{ slug: string }> }) {
+export default function StudentCourseLearnPage({ params, searchParams }: { params: Promise<{ slug: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const dialog = useDialog();
   const { slug } = use(params);
+  const search = use(searchParams);
+  const tabParam = search.tab as 'overview' | 'qa' | undefined;
+  const threadIdParam = search.threadId as string | undefined;
+  
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -164,6 +168,8 @@ export default function StudentCourseLearnPage({ params }: { params: Promise<{ s
             activeLesson={activeLesson}
             onCompleteLesson={handleLessonComplete}
             initialTime={getLessonProgressData(activeLesson.id)?.lastWatchedTimestamp || 0}
+            defaultTab={tabParam}
+            defaultThreadId={threadIdParam}
           />
         ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>

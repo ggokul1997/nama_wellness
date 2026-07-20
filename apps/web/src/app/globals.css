@@ -367,13 +367,13 @@ textarea.input {
 }
 
 .btn-secondary {
-  background: var(--surface-border);
-  color: var(--brand-300);
-  border: 1px solid var(--surface-border);
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+  border: 1px solid var(--surface-border-strong);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--surface-border-strong);
+  background: #2a2a4a;
   border-color: var(--brand-500);
   transform: translateY(-1px);
 }
@@ -401,14 +401,25 @@ textarea.input {
 }
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--error);
+  color: #fff;
+  border: 1px solid var(--error);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: var(--error);
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn-success {
+  background: var(--success);
+  color: #fff;
+  border: 1px solid var(--success);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #059669;
+  border-color: #059669;
 }
 
 .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; }
@@ -534,9 +545,16 @@ textarea.input {
 /* Visibility helpers — use flex/none so flex children still flex correctly */
 .hide-mobile { display: none !important; }
 .hide-desktop { display: flex !important; }
+.hide-mobile-cell { display: none !important; }
+.hide-mobile-block { display: none !important; }
+.hide-desktop-block { display: block !important; }
+
 @media (min-width: 1024px) {
   .hide-mobile { display: flex !important; }
   .hide-desktop { display: none !important; }
+  .hide-mobile-cell { display: table-cell !important; }
+  .hide-mobile-block { display: block !important; }
+  .hide-desktop-block { display: none !important; }
 }
 
 /* ============================================================= */
@@ -607,6 +625,15 @@ textarea.input {
   z-index: 200;
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Notification Item */
+.notification-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.notification-item:hover {
+  background: var(--surface-hover) !important;
+  transform: translateX(4px);
 }
 
 .sidebar.is-open {

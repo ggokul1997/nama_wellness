@@ -63,6 +63,10 @@ model User {
   chatSessionsAsStudent      ChatSession[]      @relation("ChatStudent")
   chatSessionsAsTeacher      ChatSession[]      @relation("ChatTeacher")
   chatMessages               ChatMessage[]
+  discussionThreads          CourseDiscussionThread[]
+  discussionReplies          CourseDiscussionReply[]
+
+  payouts                    Payout[]           @relation("TeacherPayouts")
 
   // Relations for Sprint E
   companyAdmin               Company?             @relation("CompanyAdmin")
@@ -272,6 +276,7 @@ model Course {
   liveSessions    LiveSession[]
   certificates    Certificate[]
   chatSessions    ChatSession[]
+  discussionThreads CourseDiscussionThread[]
 
   @@map("courses")
 }
@@ -533,6 +538,37 @@ model Transaction {
 }
 
 // =============================================================
+// Admin Analytics & Payouts (Sprint H)
+// =============================================================
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+model Payout {
+  id           String       @id @default(cuid())
+  teacherId    String
+  amount       Decimal      @db.Decimal(12,2)
+  currency     String       @default("INR")
+  status       PayoutStatus @default(PENDING)
+  periodStart  DateTime
+  periodEnd    DateTime
+  txCount      Int          // number of source transactions included
+  grossRevenue Decimal      @db.Decimal(12,2)  // platform's total for this period
+  notes        String?
+  processedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  teacher      User         @relation("TeacherPayouts", fields: [teacherId], references: [id])
+
+  @@map("payouts")
+}
+
+// =============================================================
 // Corporate & B2B (Sprint E)
 // =============================================================
 
@@ -642,6 +678,7 @@ model Notification {
   userId    String
   title     String
   message   String           @db.Text
+  link      String?          @db.Text
   isRead    Boolean          @default(false)
   type      NotificationType @default(INFO)
   createdAt DateTime         @default(now())
@@ -744,3 +781,36 @@ model IndividualSessionBooking {
   @@map("individual_session_bookings")
 }
 
+// =============================================================
+// Course Discussions (Q&A)
+// =============================================================
+
+model CourseDiscussionThread {
+  id        String   @id @default(cuid())
+  courseId  String
+  authorId  String
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies   CourseDiscussionReply[]
+
+  @@map("course_discussion_threads")
+}
+
+model CourseDiscussionReply {
+  id        String   @id @default(cuid())
+  threadId  String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  thread    CourseDiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author    User                   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("course_discussion_replies")
+}

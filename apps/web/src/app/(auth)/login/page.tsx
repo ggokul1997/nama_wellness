@@ -136,11 +136,12 @@ function LoginContent() {
             </Link>
           </div>
 
-          <button
-            type="submit"
-            id="btn-login"
+          <button 
+            type="submit" 
+            className="btn btn-success btn-full" 
+            style={{ marginTop: '1rem', padding: '0.875rem' }}
             disabled={isSubmitting}
-            className="btn btn-primary btn-full btn-lg"
+            id="btn-login"
           >
             {isSubmitting ? <span className="btn-spinner" /> : null}
             {isSubmitting ? 'Signing in…' : 'Sign in'}

@@ -116,7 +116,7 @@ export function Sidebar({ navItems, portalName, portalIcon, accentColor = 'var(-
       <div style={{ padding: '0.75rem', borderTop: '1px solid var(--surface-border)' }}>
         <button
           onClick={handleLogout}
-          className="btn btn-ghost btn-full"
+          className="btn btn-danger btn-full"
           style={{ justifyContent: 'flex-start', gap: '0.625rem', fontSize: '0.9rem' }}
         >
           <span>🚪</span> Sign out

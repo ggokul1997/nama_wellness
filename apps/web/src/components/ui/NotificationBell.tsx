@@ -122,11 +122,25 @@ export function NotificationBell() {
               notifications.map(notification => (
                 <div 
                   key={notification.id} 
+                  className="notification-item"
                   onClick={() => {
                     if (!notification.isRead) handleMarkAsRead(notification.id);
                     setOpen(false);
-                    if (notification.message.toLowerCase().includes('certificate') || notification.title.toLowerCase().includes('certificate')) {
+                    
+                    if (notification.link) {
+                      router.push(notification.link);
+                      return;
+                    }
+
+                    // Fallback for older notifications without a link
+                    const title = notification.title.toLowerCase();
+                    const msg = notification.message.toLowerCase();
+                    if (msg.includes('certificate') || title.includes('certificate')) {
                       router.push('/student/certificates');
+                    } else if (title.includes('new question')) {
+                      router.push('/teacher/qa');
+                    } else if (title.includes('new reply')) {
+                      router.push('/student/dashboard');
                     }
                   }}
                   style={{ 
