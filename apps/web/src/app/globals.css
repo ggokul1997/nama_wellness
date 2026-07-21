@@ -426,6 +426,27 @@ textarea.input {
 .btn-lg { padding: 1rem 2rem; font-size: 1.0625rem; }
 .btn-full { width: 100%; }
 
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.btn-icon:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--surface-border);
+}
+
 /* Spinner inside button */
 .btn-spinner {
   width: 1em;
@@ -1185,4 +1206,83 @@ html, body {
   .availability-time-block input {
     width: 100% !important;
   }
+}
+
+/* =============================================================
+   DROPDOWN MENUS
+   ============================================================= */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 50;
+  min-width: 180px;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-overlay);
+  border: 1px solid var(--surface-border-strong);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all var(--transition-fast);
+}
+
+/* Show on hover or focus */
+.dropdown-container:hover .dropdown-menu,
+.dropdown-container:focus-within .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Dropdown Items */
+.dropdown-menu button,
+.dropdown-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  text-decoration: none;
+}
+
+.dropdown-menu button:hover,
+.dropdown-menu a:hover {
+  background: var(--surface-hover);
+}
+
+/* Status variants */
+.dropdown-menu button.danger,
+.dropdown-menu a.danger {
+  color: var(--error);
+}
+.dropdown-menu button.danger:hover,
+.dropdown-menu a.danger:hover {
+  background: var(--error-bg);
+}
+
+.dropdown-menu button.success,
+.dropdown-menu a.success {
+  color: var(--success);
+}
+.dropdown-menu button.success:hover,
+.dropdown-menu a.success:hover {
+  background: var(--success-bg);
 }

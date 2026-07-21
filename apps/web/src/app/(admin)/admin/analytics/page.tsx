@@ -35,12 +35,12 @@ export default function AdminAnalytics() {
 
   return (
     <div className="page-content">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div className="page-header">
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>Analytics & Reporting 📊</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.375rem' }}>Deep insights into platform growth and revenue.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {[7, 30, 365].map((d) => (
             <button
               key={d}
@@ -89,7 +89,7 @@ export default function AdminAnalytics() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+      <div className="responsive-grid-2" style={{ gap: '1.5rem' }}>
         {/* User Growth */}
         <div className="glass-card" style={{ padding: '1.5rem' }}>
           <h3 style={{ marginBottom: '1.5rem' }}>User Growth</h3>
@@ -115,7 +115,8 @@ export default function AdminAnalytics() {
         {/* Top Courses */}
         <div className="glass-card" style={{ padding: '1.5rem' }}>
           <h3 style={{ marginBottom: '1.5rem' }}>Top Performing Courses</h3>
-          <div className="table-responsive">
+          {/* Desktop Table Layout */}
+          <div className="table-responsive hide-mobile-block">
             <table className="data-table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--surface-border)' }}>
@@ -146,6 +147,39 @@ export default function AdminAnalytics() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card Layout */}
+          <div className="hide-desktop-block" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {data.topCourses.length === 0 ? (
+              <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No published courses yet.
+              </div>
+            ) : (
+              data.topCourses.map((c) => (
+                <div key={c.courseId} style={{ padding: '1rem', marginBottom: '1rem', border: '1px solid var(--surface-border)', borderRadius: 'var(--radius-md)', background: 'var(--surface-raised)' }}>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontWeight: 600 }}>{c.title}</div>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{c.teacherName}</div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.875rem' }}>
+                    <div>
+                      <div style={{ color: 'var(--text-secondary)' }}>Enrollments</div>
+                      <div style={{ fontWeight: 500 }}>{c.enrollmentCount}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: 'var(--text-secondary)' }}>Rating</div>
+                      <div style={{ fontWeight: 500 }}>{c.averageRating > 0 ? `⭐ ${c.averageRating}` : '—'}</div>
+                    </div>
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <div style={{ color: 'var(--text-secondary)' }}>Revenue</div>
+                      <div style={{ fontWeight: 600, color: 'var(--brand-500)' }}>₹{c.totalRevenue.toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -6,10 +6,13 @@ export const payoutsService = {
   async generatePayouts(periodStart: string, periodEnd: string) {
     const start = new Date(periodStart);
     const end = new Date(periodEnd);
-
+    
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       throw Errors.badRequest('Invalid date range');
     }
+    
+    // Set end date to end of day to include all transactions on that day
+    end.setUTCHours(23, 59, 59, 999);
 
     const teachers = await payoutsRepository.getTeachersWithEarnings(start, end);
     const payouts = [];

@@ -1,4 +1,5 @@
 import { teacherApplicationsRepository } from './teacher-applications.repository.js';
+import { prisma } from '../../infrastructure/database/prisma.client.js';
 import { s3Utils } from '../../utils/s3.js';
 import { Errors } from '../../utils/errors.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -93,9 +94,23 @@ export const teacherApplicationsService = {
 
     const status = approve ? 'APPROVED' : 'REJECTED';
     
-    // In a real application, if approved, we'd also create a TeacherProfile and update UserRole
-    // But for MVP Phase 1, we just set the application status to APPROVED.
+    const updatedApp = await teacherApplicationsRepository.updateStatus(applicationId, status, adminId, rejectionReason);
 
-    return teacherApplicationsRepository.updateStatus(applicationId, status, adminId, rejectionReason);
+    if (approve) {
+      await prisma.$transaction([
+        prisma.userRole.upsert({
+          where: { userId_role: { userId: app.userId, role: 'TEACHER' } },
+          create: { userId: app.userId, role: 'TEACHER', productVariant: 'EDPRO' },
+          update: {},
+        }),
+        prisma.teacherProfile.upsert({
+          where: { userId: app.userId },
+          create: { userId: app.userId, specialties: [] },
+          update: {},
+        }),
+      ]);
+    }
+
+    return updatedApp;
   }
 };

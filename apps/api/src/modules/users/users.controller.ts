@@ -51,4 +51,84 @@ export const usersController = {
 
     res.status(200).json({ success: true, data: { teacherProfile } });
   },
+
+  async getAdminUsersList(req: Request, res: Response): Promise<void> {
+    const search = req.query.search as string | undefined;
+    const role = req.query.role as string | undefined;
+    const status = req.query.status as string | undefined;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { profile: { firstName: { contains: search, mode: 'insensitive' } } },
+        { profile: { lastName: { contains: search, mode: 'insensitive' } } }
+      ];
+    }
+    if (role && role !== 'ALL') {
+      where.roles = { some: { role } };
+    }
+    if (status && status !== 'ALL') {
+      where.status = status;
+    }
+
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        status: true,
+        createdAt: true,
+        profile: {
+          select: { firstName: true, lastName: true, avatarUrl: true }
+        },
+        roles: {
+          select: { role: true }
+        },
+        _count: {
+          select: { enrollments: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const formattedUsers = users.map(user => ({
+      id: user.id,
+      email: user.email,
+      firstName: user.profile?.firstName || '',
+      lastName: user.profile?.lastName || '',
+      avatarUrl: user.profile?.avatarUrl || null,
+      status: user.status,
+      roles: user.roles.map(r => r.role),
+      enrollmentsCount: user._count.enrollments,
+      joinedAt: user.createdAt.toISOString()
+    }));
+
+    const totalUsers = await prisma.user.count();
+    const activeStudents = await prisma.user.count({ where: { status: 'ACTIVE', roles: { some: { role: 'STUDENT' } } } });
+    const teachers = await prisma.user.count({ where: { roles: { some: { role: 'TEACHER' } } } });
+    const admins = await prisma.user.count({ where: { roles: { some: { role: 'ADMIN' } } } });
+
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        users: formattedUsers,
+        summary: { totalUsers, activeStudents, teachers, admins }
+      }
+    });
+  },
+
+  async updateUserStatus(req: Request, res: Response): Promise<void> {
+    const id = req.params.id as string;
+    const status = req.body.status as any;
+    
+    if (!id || !status) throw Errors.badRequest('Missing id or status');
+
+    await prisma.user.update({
+      where: { id },
+      data: { status }
+    });
+
+    res.status(200).json({ success: true, message: 'User status updated' });
+  },
 };

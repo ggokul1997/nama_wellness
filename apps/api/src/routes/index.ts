@@ -18,6 +18,8 @@ import { bookingsRoutes } from '../modules/bookings/bookings.routes.js';
 import discussionsRouter from '../modules/discussions/discussions.routes.js';
 import { analyticsRouter } from '../modules/analytics/analytics.routes.js';
 import { payoutsRouter } from '../modules/payouts/payouts.routes.js';
+import teachersRouter from '../modules/teachers/teachers.routes.js';
+import { auditLogsRouter } from '../modules/audit-logs/audit-logs.routes.js';
 
 export const v1Router: Router = Router();
 
@@ -53,5 +55,5 @@ v1Router.use('/bookings', bookingsRoutes);
 v1Router.use('/discussions', discussionsRouter);
 v1Router.use('/analytics', analyticsRouter);
 v1Router.use('/payouts', payoutsRouter);
-// Sprint B onwards — routes added here:
-// v1Router.use('/teacher', teacherRouter);
+v1Router.use('/admin/teachers', teachersRouter);
+v1Router.use('/admin/audit-logs', auditLogsRouter);

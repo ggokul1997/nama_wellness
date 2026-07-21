@@ -18,6 +18,10 @@ export default function TeacherAvailabilityPage() {
   // We'll manage a local state of slots to edit easily
   const [slots, setSlots] = useState<{ dayOfWeek: number; startTime: string; endTime: string; isAvailable: boolean }[]>([]);
   const [advanceNoticeHours, setAdvanceNoticeHours] = useState<number | ''>(24);
+  
+  // State for the currently saved (active) settings
+  const [savedSlots, setSavedSlots] = useState<{ dayOfWeek: number; startTime: string; endTime: string; isAvailable: boolean }[]>([]);
+  const [savedAdvanceNoticeHours, setSavedAdvanceNoticeHours] = useState<number>(24);
 
   useEffect(() => {
     if (user?.id) {
@@ -42,6 +46,8 @@ export default function TeacherAvailabilityPage() {
       });
 
       setSlots(initialSlots);
+      setSavedSlots(initialSlots);
+      setSavedAdvanceNoticeHours(res.data?.advanceNoticeHours ?? 24);
     } catch (err: any) {
       toast.error('Failed to load availability');
     } finally {
@@ -55,6 +61,8 @@ export default function TeacherAvailabilityPage() {
       // Only send available slots or all slots? API accepts an array, we'll send all so teacher can toggle
       const finalNoticeHours = advanceNoticeHours === '' ? 0 : advanceNoticeHours;
       await updateTeacherAvailability({ slots, advanceNoticeHours: finalNoticeHours });
+      setSavedSlots(slots);
+      setSavedAdvanceNoticeHours(finalNoticeHours);
       toast.success('Availability updated successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to save availability');
@@ -83,6 +91,42 @@ export default function TeacherAvailabilityPage() {
         <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem', maxWidth: '800px' }}>
           Set your weekly recurring availability for 1-on-1 sessions. Students will only be able to book you during these hours. Times are in your local timezone.
         </p>
+      </div>
+
+      <div className="glass-card animate-fade-up" style={{ padding: '1.5rem', borderLeft: '4px solid var(--brand-500)', background: 'var(--surface-raised)' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>Current Active Settings</h2>
+        <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Advance Notice Required</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>{savedAdvanceNoticeHours} Hours</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Available Days</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+              {savedSlots.filter(s => s.isAvailable).length} Days / Week
+            </div>
+          </div>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Active Hours</div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {savedSlots.filter(s => s.isAvailable).length === 0 ? (
+                <span style={{ color: 'var(--text-muted)' }}>No availability set</span>
+              ) : (
+                savedSlots.filter(s => s.isAvailable).slice(0, 3).map(s => (
+                  <div key={s.dayOfWeek}>
+                    <span style={{ fontWeight: 600, width: '40px', display: 'inline-block' }}>{DAYS_OF_WEEK[s.dayOfWeek].substring(0, 3)}:</span> 
+                    {s.startTime} - {s.endTime}
+                  </div>
+                ))
+              )}
+              {savedSlots.filter(s => s.isAvailable).length > 3 && (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                  + {savedSlots.filter(s => s.isAvailable).length - 3} more day(s)
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

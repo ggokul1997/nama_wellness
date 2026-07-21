@@ -13,6 +13,9 @@ export type * from './types/earnings.types.js';
 export type * from './types/company.types.js';
 export type * from './types/chat.types.js';
 export type * from './types/bookings.types.js';
+export * from './types/admin-teachers.types.js';
+export * from './types/admin-users.types.js';
+export * from './types/admin-audit-logs.types.js';
 
 // Constants
 export * from './constants/roles.js';
