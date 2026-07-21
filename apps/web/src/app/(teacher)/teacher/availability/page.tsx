@@ -114,7 +114,7 @@ export default function TeacherAvailabilityPage() {
               ) : (
                 savedSlots.filter(s => s.isAvailable).slice(0, 3).map(s => (
                   <div key={s.dayOfWeek}>
-                    <span style={{ fontWeight: 600, width: '40px', display: 'inline-block' }}>{DAYS_OF_WEEK[s.dayOfWeek].substring(0, 3)}:</span> 
+                    <span style={{ fontWeight: 600, width: '40px', display: 'inline-block' }}>{DAYS_OF_WEEK[s.dayOfWeek]?.substring(0, 3)}:</span> 
                     {s.startTime} - {s.endTime}
                   </div>
                 ))
