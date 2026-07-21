@@ -1,6 +1,8 @@
 import { bookingsRepository } from './bookings.repository.js';
 import { Errors } from '../../utils/errors.js';
 import { UpdateAvailabilityInput, IndividualPricingInput, CreateBookingInput } from '@nama/shared';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const bookingsService = {
   // --- Availability ---
@@ -64,13 +66,23 @@ export const bookingsService = {
     }
 
     try {
-      return await bookingsRepository.createBooking(
+      const booking = await bookingsRepository.createBooking(
         studentId,
         input.teacherId,
         input.pricingId,
         scheduledAt,
         pricing.durationMinutes
       );
+
+      notificationsService.createNotification({
+        userId: input.teacherId,
+        title: 'New Booking Request',
+        message: 'You have a new booking request from a student.',
+        link: '/teacher/bookings',
+        type: 'INFO'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of booking'));
+
+      return booking;
     } catch (err: unknown) {
       if (err instanceof Error && err.message.includes('Overlapping booking')) {
         throw Errors.badRequest('This time slot is no longer available. Please select another slot.');
@@ -105,6 +117,29 @@ export const bookingsService = {
       throw Errors.badRequest('Only confirmed bookings can be completed');
     }
 
-    return bookingsRepository.updateBookingStatus(bookingId, status, meetingUrl, cancellationReason);
+    const updated = await bookingsRepository.updateBookingStatus(bookingId, status, meetingUrl, cancellationReason);
+
+    if (status === 'CONFIRMED') {
+      notificationsService.createNotification({
+        userId: booking.studentId,
+        title: 'Booking Confirmed ✅',
+        message: 'Your booking has been confirmed by the teacher.',
+        link: '/student/bookings',
+        type: 'SUCCESS'
+      }).catch(err => logger.error({ err }, 'Failed to notify student of booking confirmation'));
+    } else if (status === 'CANCELLED') {
+      const recipientId = userRole === 'TEACHER' ? booking.studentId : booking.teacherId;
+      const link = userRole === 'TEACHER' ? '/student/bookings' : '/teacher/bookings';
+      
+      notificationsService.createNotification({
+        userId: recipientId,
+        title: 'Booking Cancelled ❌',
+        message: cancellationReason ? `A booking was cancelled: ${cancellationReason}` : 'A booking was cancelled.',
+        link,
+        type: 'WARNING'
+      }).catch(err => logger.error({ err }, 'Failed to notify about booking cancellation'));
+    }
+
+    return updated;
   }
 };

@@ -3,6 +3,8 @@ import { coursesRepository } from '../courses/courses.repository.js';
 import { s3Utils } from '../../utils/s3.js';
 import { Errors } from '../../utils/errors.js';
 import type { CreateStudyMaterialInput, ReviewStudyMaterialInput } from '@nama/shared';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const studyMaterialsService = {
   async getPresignedUploadUrl(courseId: string, teacherId: string, mimeType: string, fileSizeBytes: number) {
@@ -65,7 +67,27 @@ export const studyMaterialsService = {
     if (!material) throw Errors.notFound('Study material not found');
     if (material.approvalStatus !== 'PENDING') throw Errors.badRequest('Material has already been reviewed');
 
-    return studyMaterialsRepository.updateStatus(id, data.status, adminId);
+    const updated = await studyMaterialsRepository.updateStatus(id, data.status, adminId);
+
+    if (data.status === 'APPROVED') {
+      notificationsService.createNotification({
+        userId: material.course.teacherId!,
+        title: 'Study Material Approved',
+        message: `Your material "${material.title}" has been approved.`,
+        link: `/teacher/courses/${material.courseId}/materials`,
+        type: 'SUCCESS'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of material approval'));
+    } else if (data.status === 'REJECTED') {
+      notificationsService.createNotification({
+        userId: material.course.teacherId!,
+        title: 'Study Material Update',
+        message: `Your material "${material.title}" was not approved.`,
+        link: `/teacher/courses/${material.courseId}/materials`,
+        type: 'WARNING'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of material rejection'));
+    }
+
+    return updated;
   },
 
   async getDownloadUrl(id: string, userId: string, role: string) {

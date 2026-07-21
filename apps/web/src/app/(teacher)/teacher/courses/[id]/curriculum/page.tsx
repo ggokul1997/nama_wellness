@@ -17,6 +17,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [collapsedModules, setCollapsedModules] = useState<Record<string, boolean>>({});
   
   // State for creating/editing modules
   const [showModuleModal, setShowModuleModal] = useState(false);
@@ -54,6 +55,13 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleModule = (moduleId: string) => {
+    setCollapsedModules(prev => ({
+      ...prev,
+      [moduleId]: !prev[moduleId]
+    }));
   };
 
   const openNewModule = () => {
@@ -249,14 +257,20 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {[...modules].reverse().map((module, index) => {
             const displayIndex = modules.length - index;
+            const isCollapsed = collapsedModules[module.id];
             return (
             <div key={module.id} className="glass-card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--brand-500)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Module {displayIndex}: {module.title}
-                  </h3>
-                  {module.description && <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{module.description}</p>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ cursor: 'pointer', flex: 1 }} onClick={() => toggleModule(module.id)}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', display: 'inline-block', width: '1.5rem' }}>
+                      {isCollapsed ? '▶' : '▼'}
+                    </span>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      Module {displayIndex}: {module.title}
+                    </h3>
+                  </div>
+                  {module.description && <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem', marginLeft: '2rem' }}>{module.description}</p>}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={() => openEditModule(module)} className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}>Edit</button>
@@ -264,8 +278,9 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
                 </div>
               </div>
 
-              <div style={{ paddingLeft: '1rem', borderLeft: '2px solid var(--surface-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
-                {(!module.lessons || module.lessons.length === 0) ? (
+              {!isCollapsed && (
+                <div style={{ paddingLeft: '1rem', borderLeft: '2px solid var(--surface-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.5rem' }}>
+                  {(!module.lessons || module.lessons.length === 0) ? (
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>No lessons in this module yet.</p>
                 ) : (
                   module.lessons.map((lesson, lIndex) => (
@@ -298,6 +313,7 @@ export default function CurriculumBuilderPage({ params }: { params: Promise<{ id
                   </button>
                 </div>
               </div>
+              )}
             </div>
           )})}
         </div>

@@ -7,6 +7,11 @@ export const payoutsApi = {
       `/payouts?page=${page}${status && status !== 'ALL' ? `&status=${status}` : ''}`
     ),
 
+  myPayouts: (page: number = 1, status?: string) =>
+    apiFetch<{ payouts: Payout[], total: number }>(
+      `/payouts/my-payouts?page=${page}${status && status !== 'ALL' ? `&status=${status}` : ''}`
+    ),
+
   generate: (data: GeneratePayoutsInput) =>
     apiFetch<Payout[]>('/payouts/generate', { method: 'POST', body: JSON.stringify(data) }),
 

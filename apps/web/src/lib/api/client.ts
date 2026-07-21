@@ -73,7 +73,24 @@ export async function apiFetch<T>(
     headers,
   });
 
-  const data = (await response.json()) as ApiResponse<T>;
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
+
+  let data: ApiResponse<T>;
+  if (isJson) {
+    data = (await response.json()) as ApiResponse<T>;
+  } else {
+    // Handle HTML/Text error responses (e.g., from Next.js proxy or 502 Bad Gateway)
+    const text = await response.text();
+    data = {
+      success: false,
+      error: {
+        code: 'BAD_GATEWAY',
+        message: response.ok ? 'Received invalid JSON response' : `Server error: ${response.statusText}`,
+        details: { response: [text.substring(0, 100)] }
+      }
+    } as any;
+  }
   
   if (process.env.NODE_ENV === 'development') {
     console.log(`[DEBUG] apiFetch completed for ${path}`, { status: response.status, success: data.success, data });

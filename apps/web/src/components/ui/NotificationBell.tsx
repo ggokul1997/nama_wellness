@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { engagementApi } from '@/lib/api/engagement';
 import type { Notification } from '@nama/shared';
 import { useSocket } from '@/components/providers/SocketProvider';
+import { formatDistanceToNow } from 'date-fns';
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -146,11 +147,27 @@ export function NotificationBell() {
                   style={{ 
                     padding: '1rem', borderBottom: '1px solid var(--surface-border)',
                     background: notification.isRead ? 'transparent' : 'rgba(255,255,255,0.05)',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.25rem',
+                    borderLeft: `4px solid ${
+                      notification.type === 'SUCCESS' ? 'var(--success)' :
+                      notification.type === 'ERROR' ? 'var(--error)' :
+                      notification.type === 'WARNING' ? 'var(--warning)' :
+                      'var(--brand-400)'
+                    }`
                   }}
                 >
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem', color: notification.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
-                    {notification.title}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: notification.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                      {notification.title}
+                    </div>
+                    {notification.createdAt && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', marginLeft: '1rem' }}>
+                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                      </div>
+                    )}
                   </div>
                   <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                     {notification.message}

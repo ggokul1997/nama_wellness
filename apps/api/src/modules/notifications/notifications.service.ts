@@ -25,5 +25,25 @@ export const notificationsService = {
 
   async markAllAsRead(userId: string) {
     return notificationsRepository.markAllAsRead(userId);
+  },
+
+  async notifyAdmins(data: { title: string; message: string; link?: string; type?: NotificationType }) {
+    const adminIds = await notificationsRepository.getAdminUserIds();
+    const promises = adminIds.map(userId => 
+      this.createNotification({ ...data, userId }).catch(err => {
+        logger.error({ err, userId }, 'Failed to create admin notification');
+      })
+    );
+    await Promise.allSettled(promises);
+  },
+
+  async notifyAllEmployees(companyId: string, data: { title: string; message: string; link?: string; type?: NotificationType }) {
+    const employeeIds = await notificationsRepository.getCompanyEmployeeUserIds(companyId);
+    const promises = employeeIds.map(userId => 
+      this.createNotification({ ...data, userId }).catch(err => {
+        logger.error({ err, userId }, 'Failed to create employee notification');
+      })
+    );
+    await Promise.allSettled(promises);
   }
 };

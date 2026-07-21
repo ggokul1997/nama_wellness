@@ -3,6 +3,8 @@ import { enrollmentsRepository } from '../enrollments/enrollments.repository.js'
 import { coursesRepository } from '../courses/courses.repository.js';
 import { Errors } from '../../utils/errors.js';
 import { CreateReviewInput } from '@nama/shared';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const reviewsService = {
   async createReview(studentId: string, input: CreateReviewInput) {
@@ -37,6 +39,14 @@ export const reviewsService = {
     // Update teacher rating
     const { averageRating, totalReviews } = await reviewsRepository.calculateAverageRatingForTeacher(course.teacherId);
     await reviewsRepository.updateTeacherProfileRating(course.teacherId, averageRating, totalReviews);
+
+    notificationsService.createNotification({
+      userId: course.teacherId,
+      title: 'New Review Received ⭐',
+      message: `A student left a ${input.rating}-star review on your course "${course.title}".`,
+      link: `/courses/${course.slug}`,
+      type: 'INFO'
+    }).catch(err => logger.error({ err }, 'Failed to notify teacher of new review'));
 
     return review;
   },

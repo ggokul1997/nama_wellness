@@ -4,6 +4,7 @@ import { authRepository } from '../auth/auth.repository.js';
 import { generateOTP } from '../../utils/crypto.js';
 import { emailService } from '../../infrastructure/email/email.service.js';
 import { logger } from '../../infrastructure/logger/logger.js';
+import { notificationsService } from '../notifications/notifications.service.js';
 
 export const companiesService = {
   async getCompanyByAdmin(adminId: string) {
@@ -75,7 +76,25 @@ export const companiesService = {
     }
 
     // 3. Add to company
-    return companiesRepository.addEmployee(company.id, user.id);
+    const result = await companiesRepository.addEmployee(company.id, user.id);
+
+    notificationsService.createNotification({
+      userId: user.id,
+      title: 'Welcome to the Company!',
+      message: `You have been added to ${company.name}'s corporate portal.`,
+      link: '/employee/dashboard',
+      type: 'INFO'
+    }).catch(err => logger.error({ err }, 'Failed to notify employee'));
+
+    notificationsService.createNotification({
+      userId: adminId,
+      title: 'Employee Added',
+      message: `${user.email} has been successfully added to your company.`,
+      link: '/company-admin/employees',
+      type: 'SUCCESS'
+    }).catch(err => logger.error({ err }, 'Failed to notify admin'));
+
+    return result;
   },
 
   async deleteEmployee(adminId: string, employeeUserId: string) {
@@ -87,5 +106,21 @@ export const companiesService = {
     }
 
     await companiesRepository.deleteEmployee(company.id, employeeUserId);
+
+    notificationsService.createNotification({
+      userId: employeeUserId,
+      title: 'Removed from Company',
+      message: `You have been removed from ${company.name}'s corporate portal.`,
+      link: '/employee/dashboard',
+      type: 'WARNING'
+    }).catch(err => logger.error({ err }, 'Failed to notify employee'));
+
+    notificationsService.createNotification({
+      userId: adminId,
+      title: 'Employee Removed',
+      message: `An employee has been removed from your company.`,
+      link: '/company-admin/employees',
+      type: 'INFO'
+    }).catch(err => logger.error({ err }, 'Failed to notify admin'));
   },
 };

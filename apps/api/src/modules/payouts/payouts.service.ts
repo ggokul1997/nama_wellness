@@ -1,6 +1,8 @@
 import { payoutsRepository } from './payouts.repository.js';
 import { Errors } from '../../utils/errors.js';
 import type { PayoutStatus } from '@prisma/client';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const payoutsService = {
   async generatePayouts(periodStart: string, periodEnd: string) {
@@ -39,6 +41,14 @@ export const payoutsService = {
           amount: Number(payout.amount),
           grossRevenue: Number(payout.grossRevenue),
         });
+
+        notificationsService.createNotification({
+          userId: teacherId,
+          title: 'New Payout Generated',
+          message: `A new payout of ₹${Number(payout.amount)} has been generated for you.`,
+          link: '/teacher/payouts',
+          type: 'INFO'
+        }).catch(err => logger.error({ err }, 'Failed to notify teacher of payout generation'));
       }
     }
 
@@ -75,6 +85,24 @@ export const payoutsService = {
 
     const processedAt = validStatus === 'PAID' && !existing.processedAt ? new Date() : undefined;
     const updated = await payoutsRepository.updatePayoutStatus(id, validStatus, notes, processedAt);
+
+    if (validStatus === 'PAID') {
+      notificationsService.createNotification({
+        userId: existing.teacherId,
+        title: 'Payout Sent! 💸',
+        message: `Your payout of ₹${Number(existing.amount)} has been processed successfully.`,
+        link: '/teacher/payouts',
+        type: 'SUCCESS'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of paid payout'));
+    } else if (validStatus === 'FAILED') {
+      notificationsService.createNotification({
+        userId: existing.teacherId,
+        title: 'Payout Failed ⚠️',
+        message: `There was an issue processing your payout of ₹${Number(existing.amount)}. ${notes ? 'Reason: ' + notes : ''}`,
+        link: '/teacher/payouts',
+        type: 'ERROR'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of failed payout'));
+    }
 
     return {
       ...updated,

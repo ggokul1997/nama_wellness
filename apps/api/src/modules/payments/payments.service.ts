@@ -4,6 +4,8 @@ import { paymentsRepository } from './payments.repository.js';
 import { coursesRepository } from '../courses/courses.repository.js';
 import { companiesRepository } from '../companies/companies.repository.js';
 import { bookingsRepository } from '../bookings/bookings.repository.js';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 // Initialize Razorpay (dummy key if not provided)
 const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_test_dummy';
@@ -210,6 +212,22 @@ export class PaymentsService {
       const seats = parseInt(notes.seats, 10);
       if (seats > 0) {
         await companiesRepository.purchaseLicense(notes.companyId, courseId, seats);
+        
+        notificationsService.createNotification({
+          userId: transaction.userId,
+          title: 'License Purchase Confirmed',
+          message: `Your purchase of ${seats} seats has been confirmed.`,
+          link: '/company-admin/licenses',
+          type: 'SUCCESS'
+        }).catch(err => logger.error({ err }, 'Failed to notify admin of purchase'));
+
+        const course = await coursesRepository.findById(courseId);
+        notificationsService.notifyAllEmployees(notes.companyId, {
+          title: 'New Course Available! 🎓',
+          message: `Your company has purchased access to "${course?.title || 'a new course'}". Claim your seat now!`,
+          link: '/employee/dashboard',
+          type: 'INFO'
+        }).catch(err => logger.error({ err }, 'Failed to notify employees of new license'));
       }
     } else if (notes.type === 'BOOKING' && bookingId) {
       await paymentsRepository.linkBookingToTransaction(transaction.id, bookingId);
@@ -256,6 +274,22 @@ export class PaymentsService {
       const seats = parseInt(notes.seats, 10);
       if (seats > 0 && transaction.courseId) {
         await companiesRepository.purchaseLicense(notes.companyId, transaction.courseId, seats);
+
+        notificationsService.createNotification({
+          userId: transaction.userId,
+          title: 'License Purchase Confirmed',
+          message: `Your purchase of ${seats} seats has been confirmed.`,
+          link: '/company-admin/licenses',
+          type: 'SUCCESS'
+        }).catch(err => logger.error({ err }, 'Failed to notify admin of purchase'));
+
+        const course = await coursesRepository.findById(transaction.courseId);
+        notificationsService.notifyAllEmployees(notes.companyId, {
+          title: 'New Course Available! 🎓',
+          message: `Your company has purchased access to "${course?.title || 'a new course'}". Claim your seat now!`,
+          link: '/employee/dashboard',
+          type: 'INFO'
+        }).catch(err => logger.error({ err }, 'Failed to notify employees of new license'));
       }
     } else if (notes && notes.type === 'BOOKING' && transaction.bookingId) {
       await paymentsRepository.linkBookingToTransaction(transaction.id, transaction.bookingId);

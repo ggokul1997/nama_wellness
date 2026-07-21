@@ -160,7 +160,7 @@ export default function TeacherCoursesPage() {
                   </div>
                 </div>
 
-                {course.rejectedReason && (
+                {(course.status === 'CHANGES_REQUESTED' || course.status === 'REJECTED') && course.rejectedReason && (
                   <div style={{ padding: '0 1rem 0.75rem' }}>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setFeedbackModalCourse(course); }}

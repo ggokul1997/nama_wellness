@@ -5,6 +5,8 @@ import type { UpdateLessonProgressInput } from '@nama/shared';
 import type { LessonProgress } from '@prisma/client';
 import { authRepository } from '../auth/auth.repository.js';
 import { prisma } from '../../infrastructure/database/prisma.client.js';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const enrollmentsService = {
   async adminAssignCourse(userEmail: string, courseId: string) {
@@ -24,7 +26,17 @@ export const enrollmentsService = {
       throw Errors.badRequest('User is already enrolled in this course');
     }
 
-    return enrollmentsRepository.createEnrollment(userId, courseId);
+    const enrollment = await enrollmentsRepository.createEnrollment(userId, courseId);
+    
+    notificationsService.createNotification({
+      userId: course.teacherId!,
+      title: 'New Student Enrollment',
+      message: `A new student has been assigned to your course "${course.title}".`,
+      link: `/teacher/dashboard`,
+      type: 'INFO'
+    }).catch(err => logger.error({ err }, 'Failed to notify teacher of new enrollment'));
+
+    return enrollment;
   },
 
   async getMyCourses(userId: string) {
@@ -99,7 +111,8 @@ export const enrollmentsService = {
         where: {
           courseId,
           companyId: { in: companyIds }
-        }
+        },
+        include: { course: true, company: true }
       });
 
       if (!license || license.usedSeats >= license.totalSeats) {
@@ -122,13 +135,52 @@ export const enrollmentsService = {
       }
 
       // 5. Create enrollment
-      return tx.enrollment.create({
+      const enrollment = await tx.enrollment.create({
         data: {
           userId,
           courseId,
           status: 'ACTIVE'
         }
       });
+
+      const remainingSeats = license.totalSeats - (license.usedSeats + 1);
+      const remainingPercent = remainingSeats / license.totalSeats;
+
+      notificationsService.createNotification({
+        userId: license.course.teacherId!,
+        title: 'New Student Enrollment',
+        message: `An employee from ${license.company.name} has enrolled in "${license.course.title}".`,
+        link: `/teacher/dashboard`,
+        type: 'INFO'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher'));
+
+      notificationsService.createNotification({
+        userId: license.company.adminId,
+        title: 'Seat Claimed',
+        message: `An employee has claimed a seat for "${license.course.title}". Seats remaining: ${remainingSeats}/${license.totalSeats}.`,
+        link: '/company-admin/licenses',
+        type: 'INFO'
+      }).catch(err => logger.error({ err }, 'Failed to notify company admin'));
+
+      if (remainingSeats === 0) {
+        notificationsService.createNotification({
+          userId: license.company.adminId,
+          title: 'License Exhausted 🔴',
+          message: `All seats for "${license.course.title}" have been claimed!`,
+          link: '/company-admin/licenses',
+          type: 'WARNING'
+        }).catch(err => logger.error({ err }, 'Failed to notify company admin'));
+      } else if (remainingPercent <= 0.2) {
+        notificationsService.createNotification({
+          userId: license.company.adminId,
+          title: 'Low Seats Warning ⚠️',
+          message: `Only ${remainingSeats} seats left for "${license.course.title}".`,
+          link: '/company-admin/licenses',
+          type: 'WARNING'
+        }).catch(err => logger.error({ err }, 'Failed to notify company admin'));
+      }
+
+      return enrollment;
     });
   },
 
@@ -160,6 +212,18 @@ export const enrollmentsService = {
         
         if (completedCount >= totalLessons && totalLessons > 0) {
           await enrollmentsRepository.markEnrollmentCompleted(enrollment.id);
+
+          // Notify teacher that a student completed the course
+          const course = await coursesRepository.findById(courseId);
+          if (course && course.teacherId) {
+            notificationsService.createNotification({
+              userId: course.teacherId,
+              title: 'Course Completed by Student',
+              message: `A student has just completed your course "${course.title}".`,
+              link: `/teacher/courses/${courseId}`,
+              type: 'SUCCESS'
+            }).catch(err => logger.error({ err }, 'Failed to notify teacher of student completion'));
+          }
         }
       }
     }

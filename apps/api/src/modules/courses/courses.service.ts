@@ -7,6 +7,8 @@ import { s3Utils } from '../../utils/s3.js';
 import { v4 as uuidv4 } from 'uuid';
 import type { CreateCourseInput, UpdateCourseInput, CreateModuleInput, UpdateModuleInput, CreateLessonInput, UpdateLessonInput, ProposePricingInput, ReviewCourseInput, UpdateCorporateSettingsInput } from '@nama/shared';
 import { prisma } from '../../infrastructure/database/prisma.client.js';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const coursesService = {
   async getMyCourses(userId: string) {
@@ -323,7 +325,16 @@ export const coursesService = {
       throw Errors.badRequest('Course must have a proposed price before submission');
     }
 
-    return coursesRepository.update(courseId, { status: 'PENDING_REVIEW' });
+    const updatedCourse = await coursesRepository.update(courseId, { status: 'PENDING_REVIEW' });
+
+    notificationsService.notifyAdmins({
+      title: 'Course Pending Review',
+      message: `Course "${course.title}" has been submitted for review.`,
+      link: '/admin/courses',
+      type: 'INFO'
+    }).catch(err => logger.error({ err }, 'Failed to notify admins of course submission'));
+
+    return updatedCourse;
   },
 
   async adminGetPendingCourses() {
@@ -345,7 +356,8 @@ export const coursesService = {
 
     const currentPrice = await pricingRepository.findCurrentByCourse(courseId);
     
-    if (data.status === 'APPROVED') {
+    let updatedCourse;
+    if (data.status === 'APPROVED' || (data.status as string) === 'PUBLISHED') {
       if (currentPrice) {
         await pricingRepository.update(currentPrice.id, {
           approvalStatus: 'APPROVED',
@@ -353,25 +365,69 @@ export const coursesService = {
           amount: data.finalPrice !== undefined ? data.finalPrice : currentPrice.amount,
           effectiveAt: new Date(),
         });
+        notificationsService.createNotification({
+          userId: course.teacherId!,
+          title: 'Pricing Approved',
+          message: `The pricing for "${course.title}" has been approved.`,
+          link: `/teacher/courses/${course.id}/publish`,
+          type: 'SUCCESS'
+        }).catch(err => logger.error({ err }, 'Failed to notify teacher of pricing approval'));
       }
-      return coursesRepository.update(courseId, { status: data.status }); // Allow skipping APPROVED directly to PUBLISHED
+      updatedCourse = await coursesRepository.update(courseId, { 
+        status: data.status,
+        rejectedReason: null
+      });
+      
+      if (data.status === 'APPROVED') {
+        notificationsService.createNotification({
+          userId: course.teacherId!,
+          title: 'Course Approved! ✅',
+          message: `Your course "${course.title}" has been approved!`,
+          link: `/teacher/courses/${course.id}/publish`,
+          type: 'SUCCESS'
+        }).catch(err => logger.error({ err }, 'Failed to notify teacher of course approval'));
+      } else if ((data.status as string) === 'PUBLISHED') {
+        notificationsService.createNotification({
+          userId: course.teacherId!,
+          title: 'Your Course is Live! 🚀',
+          message: `Your course "${course.title}" is now published.`,
+          link: '/teacher/courses',
+          type: 'SUCCESS'
+        }).catch(err => logger.error({ err }, 'Failed to notify teacher of course publish'));
+      }
     } else if (data.status === 'CHANGES_REQUESTED') {
       if (currentPrice) {
         await pricingRepository.update(currentPrice.id, {
           approvalStatus: 'REJECTED',
           approvedBy: adminId,
         });
+        notificationsService.createNotification({
+          userId: course.teacherId!,
+          title: 'Pricing Update',
+          message: `The pricing proposal for "${course.title}" was rejected.`,
+          link: `/teacher/courses/${course.id}/publish`,
+          type: 'WARNING'
+        }).catch(err => logger.error({ err }, 'Failed to notify teacher of pricing rejection'));
       }
-      return coursesRepository.update(courseId, { 
+      updatedCourse = await coursesRepository.update(courseId, { 
         status: 'CHANGES_REQUESTED',
         rejectedReason: data.rejectionReason || null
       });
+      notificationsService.createNotification({
+        userId: course.teacherId!,
+        title: 'Changes Requested for Course',
+        message: `Changes were requested for "${course.title}".`,
+        link: `/teacher/courses/${course.id}/edit?showFeedback=true`,
+        type: 'WARNING'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of changes requested'));
     } else {
-      return coursesRepository.update(courseId, { 
+      updatedCourse = await coursesRepository.update(courseId, { 
         status: 'REJECTED',
         rejectedReason: data.rejectionReason || null
       });
     }
+
+    return updatedCourse;
   },
 
   async clearCourseFeedback(courseId: string, teacherId: string) {
@@ -389,6 +445,16 @@ export const coursesService = {
       throw Errors.badRequest('Course must be approved before publishing');
     }
     
-    return coursesRepository.update(courseId, { status: 'PUBLISHED' });
+    const updatedCourse = await coursesRepository.update(courseId, { status: 'PUBLISHED' });
+
+    notificationsService.createNotification({
+      userId: course.teacherId!,
+      title: 'Your Course is Live! 🚀',
+      message: `Your course "${course.title}" is now published.`,
+      link: '/teacher/courses',
+      type: 'SUCCESS'
+    }).catch(err => logger.error({ err }, 'Failed to notify teacher of course publish'));
+
+    return updatedCourse;
   }
 };

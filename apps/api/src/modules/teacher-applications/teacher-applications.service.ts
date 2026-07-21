@@ -4,6 +4,8 @@ import { s3Utils } from '../../utils/s3.js';
 import { Errors } from '../../utils/errors.js';
 import { v4 as uuidv4 } from 'uuid';
 import type { DocumentType } from '@prisma/client';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const teacherApplicationsService = {
   async getMyApplication(userId: string) {
@@ -72,7 +74,24 @@ export const teacherApplicationsService = {
     // Update user profile
     await teacherApplicationsRepository.updateUserProfile(userId, firstName, lastName);
 
-    return teacherApplicationsRepository.submit(applicationId, teachingSubject);
+    const submittedApp = await teacherApplicationsRepository.submit(applicationId, teachingSubject);
+
+    notificationsService.notifyAdmins({
+      title: 'New Teacher Application',
+      message: `A new application from ${firstName} ${lastName} is pending review.`,
+      link: '/admin/teacher-applications',
+      type: 'INFO'
+    }).catch(err => logger.error({ err }, 'Failed to notify admins'));
+
+    notificationsService.createNotification({
+      userId,
+      title: 'Application Received',
+      message: 'Your teacher application has been submitted successfully and is pending review.',
+      link: '/teacher/dashboard',
+      type: 'SUCCESS'
+    }).catch(err => logger.error({ err }, 'Failed to notify teacher'));
+
+    return submittedApp;
   },
 
   // Admin functions
@@ -109,6 +128,22 @@ export const teacherApplicationsService = {
           update: {},
         }),
       ]);
+
+      notificationsService.createNotification({
+        userId: app.userId,
+        title: 'Application Approved! 🎉',
+        message: 'Congratulations! Your teacher application has been approved. You can now start creating courses.',
+        link: '/teacher/dashboard',
+        type: 'SUCCESS'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of approval'));
+    } else {
+      notificationsService.createNotification({
+        userId: app.userId,
+        title: 'Application Update',
+        message: rejectionReason ? `Your application was not approved: ${rejectionReason}` : 'Your application was not approved.',
+        link: '/teacher/dashboard',
+        type: 'WARNING'
+      }).catch(err => logger.error({ err }, 'Failed to notify teacher of rejection'));
     }
 
     return updatedApp;

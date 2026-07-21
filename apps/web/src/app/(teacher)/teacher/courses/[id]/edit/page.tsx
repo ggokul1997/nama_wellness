@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useDialog } from '@/components/providers/DialogProvider';
 import { CustomSelect } from '@/components/ui/CustomSelect';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { coursesApi } from '@/lib/api/courses';
 import { categoriesApi } from '@/lib/api/categories';
 import type { Category, Course } from '@nama/shared';
@@ -21,6 +21,10 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [currentCoverUrl, setCurrentCoverUrl] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{title?: string, description?: string, categoryId?: string}>({});
+  const [courseStatus, setCourseStatus] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const searchParams = useSearchParams();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,14 +41,23 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         setTitle(course.title);
         setDescription(course.description);
         setCourseType(course.courseType);
+        setCourseType(course.courseType);
         setCategoryId(course.categoryId);
         setCurrentCoverUrl(course.coverImageUrl || null);
+        setCourseStatus(course.status);
+        setRejectionReason(course.rejectedReason || '');
       }
       setCategories(catRes.data?.categories || []);
     }).catch(err => {
       setError(err.message || 'Failed to load course');
     }).finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (searchParams?.get('showFeedback') === 'true' && courseStatus === 'CHANGES_REQUESTED') {
+      setShowFeedbackModal(true);
+    }
+  }, [searchParams, courseStatus]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -135,6 +148,17 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
       {error && <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
       <form noValidate onSubmit={handleSubmit} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '2rem' }}>
+        
+        {courseStatus === 'CHANGES_REQUESTED' && (
+          <button 
+            type="button"
+            onClick={() => setShowFeedbackModal(true)}
+            className="btn btn-secondary" 
+            style={{ width: '100%', fontSize: '0.875rem', padding: '0.75rem', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)', border: '1px solid rgba(245, 158, 11, 0.2)' }}
+          >
+            ⚠️ View Admin Feedback
+          </button>
+        )}
 
         <div>
           <label className="label">Course Title</label>
@@ -204,6 +228,24 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
         </div>
 
       </form>
+
+      {/* Admin Feedback Modal */}
+      {showFeedbackModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', background: 'var(--surface-base)' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem', color: 'var(--warning)' }}>
+              Admin Feedback
+            </h2>
+            <p style={{ fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '1.5rem', whiteSpace: 'pre-wrap', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--surface-border)' }}>
+              {rejectionReason || 'No specific feedback provided.'}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button type="button" onClick={() => setShowFeedbackModal(false)} className="btn btn-ghost">Close</button>
+              <button type="button" onClick={() => setShowFeedbackModal(false)} className="btn btn-primary" style={{ background: 'var(--warning)', color: '#000' }}>Got it!</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

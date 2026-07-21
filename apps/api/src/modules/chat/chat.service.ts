@@ -1,5 +1,7 @@
 import { chatRepository } from './chat.repository.js';
 import { Errors } from '../../utils/errors.js';
+import { notificationsService } from '../notifications/notifications.service.js';
+import { logger } from '../../infrastructure/logger/logger.js';
 
 export const chatService = {
   async getSessions(userId: string) {
@@ -55,6 +57,20 @@ export const chatService = {
     }
 
     const message = await chatRepository.createMessage(sessionId, senderId, content.trim());
+    
+    // Determine recipient and their role based on who sent it
+    const isSenderStudent = senderId === session.studentId;
+    const recipientId = isSenderStudent ? session.teacherId : session.studentId;
+    const link = isSenderStudent ? `/teacher/chat` : `/student/chat`;
+
+    notificationsService.createNotification({
+      userId: recipientId,
+      title: 'New Chat Message 💬',
+      message: 'You have a new message in chat.',
+      link,
+      type: 'INFO'
+    }).catch(err => logger.error({ err }, 'Failed to notify about new chat message'));
+
     return { message, session };
   },
 };

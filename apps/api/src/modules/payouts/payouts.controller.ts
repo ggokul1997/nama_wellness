@@ -17,6 +17,16 @@ export const listPayouts = async (req: Request, res: Response) => {
   res.json({ success: true, data });
 };
 
+export const getMyPayouts = async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+  const status = req.query.status as string | undefined;
+  const teacherId = req.user?.id; // Assuming authenticate middleware sets req.user
+
+  const data = await payoutsService.listPayouts(page, limit, status, teacherId);
+  res.json({ success: true, data });
+};
+
 export const updatePayout = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, notes } = req.body;

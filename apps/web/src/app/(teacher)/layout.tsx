@@ -19,6 +19,7 @@ const TEACHER_NAV = [
   { href: ROUTES.TEACHER_PRICING, label: 'Pricing', icon: '🏷️' },
   { href: ROUTES.TEACHER_BOOKINGS, label: 'Bookings', icon: '📅' },
   { href: ROUTES.TEACHER_EARNINGS, label: 'Earnings', icon: '💰' },
+  { href: '/teacher/payouts', label: 'Payouts', icon: '🏦' },
   { href: ROUTES.TEACHER_CHAT, label: 'Chat', icon: '💬' },
   { href: '/teacher/qa', label: 'Q&A', icon: '❓' },
   { href: ROUTES.TEACHER_PROFILE, label: 'Profile', icon: '👤' },

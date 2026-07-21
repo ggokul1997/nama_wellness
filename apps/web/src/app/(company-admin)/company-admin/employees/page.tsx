@@ -90,43 +90,41 @@ export default function CompanyEmployeesPage() {
         {employees.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)' }}>No employees found.</p>
         ) : (
-          <div className="table-responsive" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', minWidth: '800px', padding: '0.75rem 1rem', borderBottom: '1px solid var(--surface-border)', color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 600 }}>
-              <div>Name</div>
-              <div>Email</div>
-              <div>Joined</div>
-              <div>Status</div>
-              <div style={{ textAlign: 'right' }}>Actions</div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {employees.map(emp => {
               const isPending = (emp.user as any)?.passwordHash === 'invitation-pending';
               
               return (
-                <div key={emp.id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', minWidth: '800px', padding: '1rem', alignItems: 'center', background: 'var(--surface-hover)', borderRadius: '0.5rem' }}>
-                  <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
-                    {emp.user?.profile?.firstName} {emp.user?.profile?.lastName}
+                <div key={emp.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--surface-hover)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {emp.user?.profile?.firstName} {emp.user?.profile?.lastName}
+                      </h3>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                        {emp.user?.email}
+                      </p>
+                    </div>
+                    <div>
+                      {isPending ? (
+                        <span style={{ background: 'var(--warning-bg)', color: 'var(--warning)', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
+                          Pending
+                        </span>
+                      ) : (
+                        <span style={{ background: 'var(--success-bg)', color: 'var(--success)', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
+                          Joined
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ color: 'var(--text-secondary)' }}>
-                    {emp.user?.email}
-                  </div>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                    {new Date(emp.joinedAt).toLocaleDateString()}
-                  </div>
-                  <div>
-                    {isPending ? (
-                      <span style={{ background: 'var(--warning-bg)', color: 'var(--warning)', padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
-                        Pending
-                      </span>
-                    ) : (
-                      <span style={{ background: 'var(--success-bg)', color: 'var(--success)', padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
-                        Joined
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--surface-border)' }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                      Joined: {new Date(emp.joinedAt).toLocaleDateString()}
+                    </div>
                     <button 
                       onClick={() => handleDelete(emp.userId, emp.user?.email || '')} 
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-ghost btn-sm"
                       style={{ color: 'var(--error)' }}
                     >
                       Delete
